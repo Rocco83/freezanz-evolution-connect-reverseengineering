@@ -182,7 +182,7 @@ second = 45
 | 13 | IO14 | 14 | — | — | Non usato | — | ✔︎ |
 | 14 | IO12 | 12 | N/C | — | Collegato a **R35** (N/C) | Strapping · LOW al boot | ⚠︎ |
 | 15 | GND | — | — | — | Non usato sulla scheda (pad GND) | Ground | ✔︎ |
-| 16 | IO13 | 13 | **IPOTESI** SW3_DRV (via Q4, accensione via software) - routing R27 -> R9 -> Q4 (piedino destro) -> Q4 (piedino centrale) -> R100 -> R71(?) -> Piedino vicino D11 SW3 ON/OFF | — | — | Strapping | ⚠︎ | Non disponibile |
+| 16 | IO13 | 13 | **IPOTESI** SW2_DRV (via Q4, accensione via software) - routing R27 -> R9 -> Q4 (piedino destro) -> Q4 (piedino centrale) -> R100 -> R71(?) -> Piedino vicino D11 SW2 ON/OFF | — | — | Strapping | ⚠︎ | Non disponibile |
 | 17 | SD2 | 9 | — | — | Non disponibile | SPI flash interno | ✗ |
 | 18 | SWP/SD3 | 10 | — | — | Non disponibile | SPI flash interno | ✗ |
 | 19 | SCS/CMD | 11 | — | — | Non disponibile | SPI flash interno | ✗ |
@@ -247,7 +247,7 @@ second = 45
 ### IO13 — Virtual ON/OFF Driver
 
 **Goal**
-Verificare che **GPIO13** possa emulare la pressione del pulsante **SW3** (On/Off) tramite il transistor Q4 (BC817-25).
+Verificare che **GPIO13** possa emulare la pressione del pulsante **SW2** (On/Off) tramite il transistor Q4 (BC817-25).
 
 **Test procedure**
 1. Inizializza i pin in MicroPython:
@@ -255,30 +255,30 @@ Verificare che **GPIO13** possa emulare la pressione del pulsante **SW3** (On/Of
    from machine import Pin
    import time
 
-   sw3_drv = Pin(13, Pin.OUT)
-   sw3_drv.value(0)                       # transistor inizialmente spento
+   sw2_drv = Pin(13, Pin.OUT)
+   sw2_drv.value(0)                       # transistor inizialmente spento
 
-   # GPIO32 normally read the button state
-   sw3_in = Pin(32, Pin.IN, Pin.PULL_UP)  # legge lo stato del pulsante SW3
+   # GPIO33 normally read the ON/OFF (SW2) button state
+   sw2_in = Pin(33, Pin.IN, Pin.PULL_UP)  # legge lo stato del pulsante SW2
    ```
 
-2. Baseline: premi fisicamente SW3 e verifica in REPL:
+2. Baseline: premi fisicamente SW2 e verifica in REPL:
    ```python
-   print("SW3 manual press:", "LOW" if sw3_in.value()==0 else "HIGH")
+   print("SW2 manual press:", "LOW" if sw2_in.value()==0 else "HIGH")
    ```
    Deve stampare LOW quando premi.
 
 3.	Emulazione: senza toccare il pulsante, esegui:
    ```python
-   sw3_drv.value(1)
+   sw2_drv.value(1)
    time.sleep(0.2)
-   sw3_drv.value(0)
-   print("SW3 emulated press:", "LOW" if sw3_in.value()==0 else "HIGH")
+   sw2_drv.value(0)
+   print("SW2 emulated press:", "LOW" if sw2_in.value()==0 else "HIGH")
    ```
-   * Controlla che sw3_in.value() ritorni 0 (LOW) durante il pulse.
+   * Controlla che sw2_in.value() ritorni 0 (LOW) durante il pulse.
    * Verifica che l’unità si accenda/spegna come con una pressione fisica.
 
-   3. (Opzionale) Collega un oscilloscopio alla linea SW3 per osservare il fronte netto grazie al feedback R9.
+   3. (Opzionale) Collega un oscilloscopio alla linea SW2 per osservare il fronte netto grazie al feedback R9.
 
 ---
 
