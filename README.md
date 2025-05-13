@@ -33,27 +33,22 @@ Raccogliere e mantenere una descrizione completa di **pin‑out**, **connettori*
 ---
 
 ## Riepilogo connettori esterni
-
-| Rif.            | Tipo / passo           | Pin ↓                          | Segnale     | Tensione                                                                                                                                              | Descrizione |
-| --------------- | ---------------------- | ------------------------------ | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| **J1 (DC\_IN)** | Jack barrel Ø2.1 mm    | Tip = **V+**, Sleeve = GND     | TBD (12 V?) | Ingresso alimentazione continua; negativo a massa, positivo protetto da **D1** (diodo anti-inversione, 1.22 kΩ) e instradato al bus **P+** via **H7** |             |
-| **AC\_IN**      | Fast-on 2 p            | L / N                          | 230 VAC     | Alimentazione di rete                                                                                                                                 |             |
-| **PUMP\_OUT**   | Fast-on 2 p            | **PUMP P / PUMP N**            | 230 VAC     | Pompa nebulizzatore (relè)                                                                                                                            |             |
-| **BAT**         | Fast-on 2 p            | **B+ / B-**                    | 12 V DC     | Backup battery; **B+ rail is hard-wired to bus P+**                                                                                                   |             |
-| **P1**          | JST-XH 3 p             | 1 = GPIO5, 2 = GND, 3 = **P+** | 0–3 V3      | I/O esterno; pin 3 condiviso con **P+** tramite jumper **H6**                                                                                         |             |
-| **J3**          | Pin header 10 × 1 (NP) | 8 = **IO15** (via R89 470 Ω)   | 0–3 V3      | Porta espansione riservata; possibili future periferiche                                                                                              |             |
-| **I²C\_EXT**    | — (virtual)            | SDA = IO21, SCL = IO22         | 0–3 V3      | Bus I²C interno verso **IC29** (codice "940MI SJ6"), serie R455/R452 & R69                                                                            |             |
-| **LED\_EXT**    | JST-XH 3 p             | TBD                            | 0–3 V3      | Connettore LED esterni                                                                                                                                |             |
+| Rif.            | Tipo / passo           | Pin ↓                        | Segnale         | Tensione       | Descrizione                                                                                   |
+|-----------------|------------------------|------------------------------|-----------------|----------------|-----------------------------------------------------------------------------------------------|
+| **J1 (DC_IN)**  | Jack barrel (diameter TBD) | Tip = **V+**, Sleeve = GND | TBD (12 V ?)    | Ingresso alimentazione continua; negativo a massa, positivo protetto da **D1** e instradato al bus **P+** via **H7** |
+| **PUMP**        | Fast-on 2 p            | **PUMP P / PUMP N**          | TBD (VCC)       | Pompa nebulizzatore (relè); usa la stessa VCC del jack J1                                      |
+| **BATT**        | Fast-on 2 p            | **B+ / B-**                  | TBD (12 V ?)    | Backup battery; **B+** è solidale alla rail **P+**                                             |
+| **P1**          | JST-XH 3 p             | 1 = **P+**, 2 = GND, 3 = GPIO5 | TBD           | I/O esterno; **P+** su pin 1 tramite jumper **H6**                                              |
+| **J3**          | Pin header 10 × 1 (NP) | 8 = **IO15** (via R89 470 Ω) | TBD             | Porta espansione riservata                                                                      |
+| **J8 (LED_EXT)**| JST-XH 3 p             | TBD                          | TBD             | Connettore LED esterni                                                                         |
 
 ### Silkscreen power rail labels (bottom edge)
-
-| Label serigrafia | Rail / Signal                                          |
-| ---------------- | ------------------------------------------------------ |
-| **P+**           | "PUMP P" – Positive supply rail for pump & peripherals |
-| **P-**           | "PUMP N" – Return/ground for pump                      |
-| **B+**           | "BATT P" – Battery positive (internally tied to P+)    |
-| **B-**           | "BATT N" – Battery negative                            |
-
+| Label serigrafia | Rail / Signal                                                                       |
+|------------------|-------------------------------------------------------------------------------------|
+| **P+**           | “PUMP P” – Positive supply rail (shared with **B+** and **J1 V+**)                   |
+| **P-**           | “PUMP N” – Return/ground for pump                                                   |
+| **B+**           | “BATT P” – Battery positive (internally tied to **P+**)                             |
+| **B-**           | “BATT N” – Battery negative                                                         |
 ## IC29 — tentative identification
 
 **Package**: likely SOIC‑8 or MSOP‑8, marking “940MI SJ6”.
@@ -153,7 +148,7 @@ The routing of **GPIO21 / GPIO22** (I²C) strongly suggests that **IC29 is an I
 | 12    | IO27       | 27   | ✔︎           | —                                              | —                         | —               | Non usato                                                                                                                                                         |
 | 13    | IO14       | 14   | ✔︎           | —                                              | —                         | —               | Non usato                                                                                                                                                         |
 | 14    | IO12       | 12   | ⚠︎           | Strapping · LOW al boot                        | N/C                       | —               | Collegato a **R35** (N/C)                                                                                                                                         |
-| 16    | IO13       | 13   | ⚠︎           | Strapping pin                                  | —                         | —               | Non usato                                                                                                                                                         |
+| 16 | IO13 | 13 | ⚠︎ | Strapping pin & virtual ON/OFF driver | **SW2_DRV** | Open-collector output | Drives Q4 (BC817-25) via R27 1 kΩ to emulate SW2 press; feedback R9 13 kΩ |
 | 17    | SHD/SD2    | 9    | ✗            | SPI flash interno                              | —                         | —               | Non disponibile                                                                                                                                                   |
 | 18    | SWP/SD3    | 10   | ✗            | SPI flash interno                              | —                         | —               | Non disponibile                                                                                                                                                   |
 | 19    | SCS/CMD    | 11   | ✗            | SPI flash interno                              | —                         | —               | Non disponibile                                                                                                                                                   |
