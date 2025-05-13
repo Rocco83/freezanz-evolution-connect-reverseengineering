@@ -74,15 +74,15 @@ The routing of **GPIO21 / GPIO22** (I²C) strongly suggests that **IC29 is an I
 
 ## Tests to perform
 
-| Rif.            | Tipo / passo             | Pin ↓                          | Segnale     | Tensione                                                                                                                                              | Descrizione |
+| Rif. | Tipo / passo | Pin ↓ | Segnale | Tensione     | Descrizione |
 | --------------- | ------------------------ | ------------------------------ | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| **J1 (DC\_IN)** | Jack barrel Ø2.1 mm      | Tip = **V+**, Sleeve = GND     | TBD (12 V?) | Ingresso alimentazione continua; negativo a massa, positivo protetto da **D1** (diodo anti‑inversione, 1.22 kΩ) e instradato al bus **P+** via **H6** |             |
-| **AC\_IN**      | Fast-on 2 p              | L / N                          | 230 VAC     | Alimentazione di rete                                                                                                                                 |             |
-| **PUMP\_OUT**   | Fast-on 2 p              | **PUMP P / PUMP N**            | 230 VAC     | Pompa nebulizzatore (relè)                                                                                                                            |             |
-| **BAT**         | Fast-on 2 p              | **B+ / B-**                    | 12 V DC     | Backup battery; **B+ rail is hard‑wired to bus P+**                                                                                                   |             |
-| **P1**          | JST-XH 3 p               | 1 = GPIO5, 2 = GND, 3 = **P+** | 0–3 V3      | I/O esterno; pin 3 condiviso con **P+** tramite jumper **H6**                                                                                         |             |
-| **J3**          | Pin header (unpopulated) | 8 = **IO15** (via R89 470 Ω)   | 0–3 V3      | Porta di espansione riservata (non cablata di serie)                                                                                                  |             |
-| **LED\_EXT**    | JST-XH 3 p               | TBD                            | 0–3 V3      | Connettore LED esterni                                                                                                                                |             |
+| **J1 (DC\_IN)** | Jack barrel Ø2.1 mm | Tip = **V+**, Sleeve = GND | TBD (12 V?) | Ingresso alimentazione continua; negativo a massa, positivo protetto da **D1** (diodo anti‑inversione, 1.22 kΩ) e instradato al bus **P+** via **H6** | |
+| **AC\_IN** | Fast-on 2 p | L / N | 230 VAC | Alimentazione di rete     | |
+| **PUMP\_OUT** | Fast-on 2 p | **PUMP P / PUMP N** | 230 VAC | Pompa nebulizzatore (relè)    | |
+| **BAT** | Fast-on 2 p | **B+ / B-** | 12 V DC | Backup battery; **B+ rail is hard‑wired to bus P+**    | |
+| **P1** | JST-XH 3 p | 1 = GPIO5, 2 = GND, 3 = **P+** | 0–3 V3 | I/O esterno; pin 3 condiviso con **P+** tramite jumper **H6**   | |
+| **J3** | Pin header (unpopulated) | 8 = **IO15** (via R89 470 Ω) | 0–3 V3 | Porta di espansione riservata (non cablata di serie)    | |
+| **LED\_EXT** | JST-XH 3 p | TBD | 0–3 V3 | Connettore LED esterni    | |
 
 ### Silkscreen power rail labels (bottom edge)
 
@@ -95,14 +95,14 @@ The routing of **GPIO21 / GPIO22** (I²C) strongly suggests that **IC29 is an I
 
 ## Connettore **J4** — Header di programmazione ESP32
 
-| Rif.            | Tipo / passo        | Pin ↓                          | Segnale     | Tensione                                                                                                                                              | Descrizione |
+| Rif. | Tipo / passo | Pin ↓ | Segnale | Tensione | Descrizione |
 | --------------- | ------------------- | ------------------------------ | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| **J1 (DC\_IN)** | Jack barrel Ø2.1 mm | Tip = **V+**, Sleeve = GND     | TBD (12 V?) | Ingresso alimentazione continua; negativo a massa, positivo protetto da **D1** (diodo anti‑inversione, 1.22 kΩ) e instradato al bus **P+** via **H6** |             |
-| **AC\_IN**      | Fast-on 2 p         | L / N                          | 230 VAC     | Alimentazione di rete                                                                                                                                 |             |
-| **PUMP\_OUT**   | Fast-on 2 p         | **PUMP P / PUMP N**            | 230 VAC     | Pompa nebulizzatore (relè)                                                                                                                            |             |
-| **BAT**         | Fast-on 2 p         | **B+ / B-**                    | 12 V DC     | Backup battery; **B+ rail is hard‑wired to bus P+**                                                                                                   |             |
-| **P1**          | JST‑XH 3 p          | 1 = GPIO5, 2 = GND, 3 = **P+** | 0–3 V3      | I/O esterno; pin 3 condiviso con **P+** tramite jumper **H6**                                                                                         |             |
-| **LED\_EXT**    | JST‑XH 3 p          | TBD                            | 0–3 V3      | Connettore LED esterni                                                                                                                                |             |
+| **J1 (DC\_IN)** | Jack barrel Ø2.1 mm | Tip = **V+**, Sleeve = GND | TBD (12 V?) | Ingresso alimentazione continua; negativo a massa, positivo protetto da **D1** (diodo anti‑inversione, 1.22 kΩ) e instradato al bus **P+** via **H6** | |
+| **AC\_IN** | Fast-on 2 p | L / N | 230 VAC | Alimentazione di rete | |
+| **PUMP\_OUT** | Fast-on 2 p | **PUMP P / PUMP N** | 230 VAC | Pompa nebulizzatore (relè) | |
+| **BAT** | Fast-on 2 p | **B+ / B-** | 12 V DC | Backup battery; **B+ rail is hard‑wired to bus P+** | |
+| **P1** | JST‑XH 3 p | 1 = GPIO5, 2 = GND, 3 = **P+** | 0–3 V3 | I/O esterno; pin 3 condiviso con **P+** tramite jumper **H6** | |
+| **LED\_EXT** | JST‑XH 3 p | TBD | 0–3 V3 | Connettore LED esterni | |
 
 ### Silkscreen power rail labels (bottom edge)
 
@@ -136,38 +136,43 @@ The routing of **GPIO21 / GPIO22** (I²C) strongly suggests that **IC29 is an I
 
 | Pin # | Pin Label | GPIO |**Freezanz Function** |Tipo |Note |Reason |Safe to use? |
 | - | ---------- | ---- |------------------------- |--------------- |------ |----------- |------------ |
-| 3 | **EN** | — |**Reset (CHIP_EN)** |Input |J1‑5 · LOW ⇒ reset   |Chip enable / strapping |⚠︎ |
-| 4 | SENSOR\_VP | 36 |— |ADC input | TBD — SW probe   |Input‑only |✗ |
-| 5 | SENSOR\_VN | 39 |— |ADC input | TBD — SW probe   |Input‑only |✗ |
-| 6 | IO34 | 34 |N/C |ADC / input |Footprint **D5** (non popolato)   |Input‑only |✗ |
-| 7 | IO35 | 35 |N/C |ADC / input |Footprint **D45** (non popolato)   |Input‑only |✗ |
-| 8 | IO32 | 32 |**SW3** (Start/Stop) |Input (PULL‑UP) |Pulsante LOW ⇒ pressed   |— |✔︎ |
-| 9 | IO33 | 33 |**SW2** (On/Off) |Input (PULL‑UP) |Pulsante LOW ⇒ pressed |— |✔︎ |
-| 10 | IO25 | 25 |**LED D7** (Red) |Output |High = ON |— |✔︎ |
-| 11 | IO26 | 26 |**Buzzer** |PWM Out |Frequenza TBD |— |✔︎ |
-| 12 | IO27 | 27 |— |— |R24->R23->Q7->X20->P- |— |✔︎ |
-| 13 | IO14 | 14 |— |— |Non usato |— |✔︎ |
-| 14 | IO12 | 12 |N/C |— |Collegato a **R35** (N/C) |Strapping · LOW al boot |⚠︎ |
-| 16 | IO13 | 13 |SPI flash interno |— |— |Strapping |⚠︎ | Non disponibile |
-| 18 | SWP/SD3 | 10 |— |— |Non disponibile |SPI flash interno |✗ |
-| 19 | SCS/CMD | 11 |— |— |Non disponibile |SPI flash interno |✗ |
-| 20 | SCK/CLK | 6 |— |— |Non disponibile |SPI flash interno |✗ |
-| 21 | SDO/SD0 | 7 |— |— |Non disponibile |SPI flash interno |✗ |
-| 22 | SDI/SD1 | 8 |— |— |Non disponibile |SPI flash interno |✗ |
-| 23 | IO15 | 15 |**Expansion line (J3‑8)** |I/O |Via **R91** (not fitted) & **C30→GND**, then through **R89 470 Ω** to connector **J3‑pin 8** (header currently unpopulated) – reserved for future external signal |Boot‑strapping pin (must be **HIGH** at reset) |⚠︎ |
-| 24 | IO2 | 2 |**Line via R95 → D9** |I/O |Series **R95 150 Ω** to node with **D9** and pulldown **R76 8.3 kΩ**; D9 centre via **R8 10 kΩ** to GND. Purpose TBD (possible indicator or external sense). |Must be LOW at boot (strapping) |⚠︎ |
-| 25 | IO0 | 0 |**BOOT (J1‑1)** |Input |LOW al reset ⇒ flash |Boot / flash mode |⚠︎ |
-| 26 | IO4 | 4 |— |— |Non usato |— |✔︎ |
-| 27 | IO16 | 16 |— |— |Non usato |— |✔︎ |
-| 28 | IO17 | 17 |— |— |Non usato |— |✔︎ |
-| 29 | IO5 | 5 |**P1‑1** |TBD input |Connettore P1 pin sinistro |Must be HIGH at boot |⚠︎ |
-| 30 | IO18 | 18 |**LED D6** (Green) |Output |High = ON |— |✔︎ |
-| 31 | IO19 | 19 |**LED D3** (Blue) |Output |High = ON |— |✔︎ |
-| 33 | IO21 | 21 |**I²C to IC29** |I/O |Through **R455** (value? ≈290 Ω) then via network (series 290 Ω → node → **R69 220 Ω**) into IC29 pin ? (3rd from top‑left) |Default I²C **SDA** |✔︎ |
-| 34 | RXD0 | 3 |**UART RX0 (J1‑3)** |Input |115 200 8N1 console |UART / flashing |⚠︎ |
-| 35 | TXD0 | 1 |**UART TX0 (J1‑2)** |Output |115 200 8N1 console |UART / flashing |⚠︎ |
-| 36 | IO22 | 22 |**I²C to IC29** |I/O |Through **R452** (≈290 Ω) → shared node with IO21 → R69 220 Ω → IC29 |Default I²C **SCL** |✔︎ |
-| 37 | IO23 | 23 |**LED D7** (Green) |Output |High = ON |— |✔︎ |
+| 1 | GND | — | — | — | Ground pad | Ground | ✔︎ |
+| 2 | 3V3 | — | — | — | Main 3.3 V rail | Power supply | ✔︎ |
+| 3 | **EN** | — | **Reset (CHIP_EN)** | Input | J1‑5 · LOW ⇒ reset | Chip enable / strapping | ⚠︎ |
+| 4 | SENSOR\_VP | 36 | — | ADC input |  TBD — SW probe   | Input‑only | ✗ |
+| 5 | SENSOR\_VN | 39 | — | ADC input |  TBD — SW probe   | Input‑only | ✗ |
+| 6 | IO34 | 34 | N/C | ADC / input | Footprint **D5** (non popolato) | Input‑only | ✗ |
+| 7 | IO35 | 35 | N/C | ADC / input | Footprint **D45** (non popolato) | Input‑only | ✗ |
+| 8 | IO32 | 32 | **SW3** (Start/Stop) | Input (PULL‑UP) | Pulsante LOW ⇒ pressed   | — | ✔︎ |
+| 9 | IO33 | 33 | **SW2** (On/Off) | Input (PULL‑UP) | Pulsante LOW ⇒ pressed | — | ✔︎ |
+| 10 | IO25 | 25 | **LED D7** (Red) | Output | High = ON | — | ✔︎ |
+| 11 | IO26 | 26 | **Buzzer** | PWM Out | Frequenza TBD | — | ✔︎ |
+| 12 | IO27 | 27 | — | — | R24->R23->Q7->X20->P- | — | ✔︎ |
+| 13 | IO14 | 14 | — | — | Non usato | — | ✔︎ |
+| 14 | IO12 | 12 | N/C | — | Collegato a **R35** (N/C) | Strapping · LOW al boot | ⚠︎ |
+| 15 | GND | — | — | — | Non usato sulla scheda (pad GND) | Ground | ✔︎ |
+| 16 | IO13 | 13 | SPI flash interno | — | — | Strapping | ⚠︎ | Non disponibile |
+| 17 | SD2 | 9 | — | — | Non disponibile | SPI flash interno | ✗ |
+| 18 | SWP/SD3 | 10 | — | — | Non disponibile | SPI flash interno | ✗ |
+| 19 | SCS/CMD | 11 | — | — | Non disponibile | SPI flash interno | ✗ |
+| 20 | SCK/CLK | 6 | — | — | Non disponibile | SPI flash interno | ✗ |
+| 21 | SDO/SD0 | 7 | — | — | Non disponibile | SPI flash interno | ✗ |
+| 22 | SDI/SD1 | 8 | — | — | Non disponibile | SPI flash interno | ✗ |
+| 23 | IO15 | 15 | **Expansion line (J3‑8)** | I/O | Via **R91** (not fitted) & **C30→GND**, then through **R89 470 Ω** to connector **J3‑pin 8** (header currently unpopulated) – reserved for future external signal | Boot‑strapping pin (must be **HIGH** at reset) | ⚠︎ |
+| 24 | IO2 | 2 | **Line via R95 → D9** | I/O | Series **R95 150 Ω** to node with **D9** and pulldown **R76 8.3 kΩ**; D9 centre via **R8 10 kΩ** to GND. Purpose TBD (possible indicator or external sense). | Must be LOW at boot (strapping) | ⚠︎ |
+| 25 | IO0 | 0 | **BOOT (J1‑1)** | Input | LOW al reset ⇒ flash | Boot / flash mode | ⚠︎ |
+| 26 | IO4 | 4 | — | — | Non usato | — | ✔︎ |
+| 27 | IO16 | 16 | — | — | Non usato | — | ✔︎ |
+| 28 | IO17 | 17 | — | — | Non usato | — | ✔︎ |
+| 29 | IO5 | 5 | **P1‑1** | TBD input | Connettore P1 pin sinistro | Must be HIGH at boot | ⚠︎ |
+| 30 | IO18 | 18 | **LED D6** (Green) | Output | High = ON | — | ✔︎ |
+| 31 | IO19 | 19 | **LED D3** (Blue) | Output | High = ON | — | ✔︎ |
+| 33 | IO21 | 21 | **I²C to IC29** | I/O | Through **R455** (value? ≈290 Ω) then via network (series 290 Ω → node → **R69 220 Ω**) into IC29 pin ? (3rd from top‑left) | Default I²C **SDA** | ✔︎ |
+| 34 | RXD0 | 3 | **UART RX0 (J1‑3)** | Input | 115 200 8N1 console | UART / flashing | ⚠︎ |
+| 35 | TXD0 | 1 | **UART TX0 (J1‑2)** | Output | 115 200 8N1 console | UART / flashing | ⚠︎ |
+| 36 | IO22 | 22 | **I²C to IC29** | I/O | Through **R452** (≈290 Ω) → shared node with IO21 → R69 220 Ω → IC29 | Default I²C **SCL** | ✔︎ |
+| 37 | IO23 | 23 | **LED D7** (Green) | Output | High = ON | — | ✔︎ |
+| 38 | GND | — | — | — | Non usato sulla scheda (pad GND termico) | Ground | ✔︎ |
 
 ---
 
