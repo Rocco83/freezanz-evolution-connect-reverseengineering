@@ -33,14 +33,14 @@ Raccogliere e mantenere una descrizione completa di **pin‑out**, **connettori*
 ---
 
 ## Riepilogo connettori esterni
-| Rif.            | Tipo / passo           | Pin ↓                        | Segnale         | Tensione       | Descrizione                                                                                   |
-|-----------------|------------------------|------------------------------|-----------------|----------------|-----------------------------------------------------------------------------------------------|
-| **J1 (DC_IN)**  | Jack barrel (diameter TBD) | Tip = **V+**, Sleeve = GND | TBD (12 V ?)    | Ingresso alimentazione continua; negativo a massa, positivo protetto da **D1** e instradato al bus **P+** via **H7** |
-| **PUMP**        | Fast-on 2 p            | **PUMP P / PUMP N**          | TBD (VCC)       | Pompa nebulizzatore (relè); usa la stessa VCC del jack J1                                      |
-| **BATT**        | Fast-on 2 p            | **B+ / B-**                  | TBD (12 V ?)    | Backup battery; **B+** è solidale alla rail **P+**                                             |
-| **P1**          | JST-XH 3 p             | 1 = **P+**, 2 = GND, 3 = GPIO5 | TBD           | I/O esterno; **P+** su pin 1 tramite jumper **H6**                                              |
-| **J3**          | Pin header 10 × 1 (NP) | 8 = **IO15** (via R89 470 Ω) | TBD             | Porta espansione riservata                                                                      |
-| **J8 (LED_EXT)**| JST-XH 3 p             | TBD                          | TBD             | Connettore LED esterni                                                                         |
+| Rif.            | Tipo / passo           | Pin ↓                        | Segnale         | Tensione       | Descrizione |
+|-----------------|------------------------|------------------------------|-----------------|----------------|-------|
+| **J1 (DC_IN)**  | Jack barrel (diameter TBD) | Tip = **V+**, Sleeve = GND | TBD (12 V ?)    | Ingresso alimentazione continua; negativo a massa, positivo protetto da **D1** e instradato al bus **P+** e **B+**, oltre a P1 via **H6** |
+| **PUMP**        | Fast-on 2 p            | **PUMP P / PUMP N**          | TBD (VCC)       | Pompa nebulizzatore (relè); usa la stessa VCC del jack J1 |
+| **BATT**        | Fast-on 2 p            | **B+ / B-**                  | TBD (12 V ?)    | Backup battery; **B+** è solidale alla rail **P+** |
+| **P1**          | JST-XH 3 p             | 1 = **VCC via H6**, 2 = GND, 3 = GPIO5 | TBD           | I/O esterno; **P+** su pin 1 tramite jumper **H6** |
+| **J3**          | Pin header 10 × 1 (NP) | 8 = **IO15** (via R89 470 Ω) | TBD             | Porta espansione riservata |
+| **J8 (LED_EXT)**| JST-XH 3 p             | TBD                          | TBD             | Connettore LED esterni |
 
 ### Silkscreen power rail labels (bottom edge)
 | Label serigrafia | Rail / Signal                                                                       |
@@ -76,7 +76,7 @@ The routing of **GPIO21 / GPIO22** (I²C) strongly suggests that **IC29 is an I
 
 | Rif.            | Tipo / passo             | Pin ↓                          | Segnale     | Tensione                                                                                                                                              | Descrizione |
 | --------------- | ------------------------ | ------------------------------ | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| **J1 (DC\_IN)** | Jack barrel Ø2.1 mm      | Tip = **V+**, Sleeve = GND     | TBD (12 V?) | Ingresso alimentazione continua; negativo a massa, positivo protetto da **D1** (diodo anti‑inversione, 1.22 kΩ) e instradato al bus **P+** via **H7** |             |
+| **J1 (DC\_IN)** | Jack barrel Ø2.1 mm      | Tip = **V+**, Sleeve = GND     | TBD (12 V?) | Ingresso alimentazione continua; negativo a massa, positivo protetto da **D1** (diodo anti‑inversione, 1.22 kΩ) e instradato al bus **P+** via **H6** |             |
 | **AC\_IN**      | Fast-on 2 p              | L / N                          | 230 VAC     | Alimentazione di rete                                                                                                                                 |             |
 | **PUMP\_OUT**   | Fast-on 2 p              | **PUMP P / PUMP N**            | 230 VAC     | Pompa nebulizzatore (relè)                                                                                                                            |             |
 | **BAT**         | Fast-on 2 p              | **B+ / B-**                    | 12 V DC     | Backup battery; **B+ rail is hard‑wired to bus P+**                                                                                                   |             |
@@ -97,7 +97,7 @@ The routing of **GPIO21 / GPIO22** (I²C) strongly suggests that **IC29 is an I
 
 | Rif.            | Tipo / passo        | Pin ↓                          | Segnale     | Tensione                                                                                                                                              | Descrizione |
 | --------------- | ------------------- | ------------------------------ | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| **J1 (DC\_IN)** | Jack barrel Ø2.1 mm | Tip = **V+**, Sleeve = GND     | TBD (12 V?) | Ingresso alimentazione continua; negativo a massa, positivo protetto da **D1** (diodo anti‑inversione, 1.22 kΩ) e instradato al bus **P+** via **H7** |             |
+| **J1 (DC\_IN)** | Jack barrel Ø2.1 mm | Tip = **V+**, Sleeve = GND     | TBD (12 V?) | Ingresso alimentazione continua; negativo a massa, positivo protetto da **D1** (diodo anti‑inversione, 1.22 kΩ) e instradato al bus **P+** via **H6** |             |
 | **AC\_IN**      | Fast-on 2 p         | L / N                          | 230 VAC     | Alimentazione di rete                                                                                                                                 |             |
 | **PUMP\_OUT**   | Fast-on 2 p         | **PUMP P / PUMP N**            | 230 VAC     | Pompa nebulizzatore (relè)                                                                                                                            |             |
 | **BAT**         | Fast-on 2 p         | **B+ / B-**                    | 12 V DC     | Backup battery; **B+ rail is hard‑wired to bus P+**                                                                                                   |             |
@@ -201,10 +201,9 @@ The routing of **GPIO21 / GPIO22** (I²C) strongly suggests that **IC29 is an I
 
 ## Ponticelli / Jumper
 
-| Jumper | Default           | Collega                              | Funzione                                                                                      |
-| ------ | ----------------- | ------------------------------------ | --------------------------------------------------------------------------------------------- |
-| **H6** | CHIUSO (fabbrica) | **P1‑3 (P+)** ↔ Bus **P+**           | Abilita continuità tra linea P+ e connettore P1; aprirlo isola P1 dal bus                     |
-| **H7** | CHIUSO (fabbrica) | **J1 V+** (dopo **D1**) ↔ Bus **P+** | Porta la tensione DC in ingresso al backplane P+; aprirlo disaccoppia l’alimentazione esterna |
+| Jumper | Default           | Collega                  | Funzione                                                            |
+|--------|-------------------|--------------------------|---------------------------------------------------------------------|
+| **H6** | CHIUSO (fabbrica) | **P1-3 (P+)** ↔ **VCC**  | Collega il pin 3 del connettore P1 alla linea VCC (DC_IN/BATT P); aprirlo isola P1 dalla VCC esterna |
 
 ---
 
