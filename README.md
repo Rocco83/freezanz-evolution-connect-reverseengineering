@@ -261,21 +261,21 @@ Verificare che **GPIO13** possa emulare la pressione del pulsante **SW2** (On/Of
    sw2_in = Pin(33, Pin.IN, Pin.PULL_UP)  # legge lo stato del pulsante SW2
 ```
 2. Baseline: premi fisicamente SW2 e verifica in REPL:
-```
-print("SW2 manual press:", "LOW" if sw2_in.value()==0 else "HIGH")
-```
+   ```python
+   print("SW2 manual press:", "LOW" if sw2_in.value()==0 else "HIGH")
+   ```
 Deve stampare LOW quando premi.
 
 	3.	Emulazione: senza toccare il pulsante, esegui:
-```
-sw2_drv.value(1)
-time.sleep(0.2)
-sw2_drv.value(0)
-print("SW2 emulated press:", "LOW" if sw2_in.value()==0 else "HIGH")
-```
- * Controlla che sw2_in.value() ritorni 0 (LOW) durante il pulse.
- * Verifica che l’unità si accenda/spegna come con una pressione fisica.
- 3. (Opzionale) Collega un oscilloscopio alla linea SW2 per osservare il fronte netto grazie al feedback R9.
+   ```python
+   sw2_drv.value(1)
+   time.sleep(0.2)
+   sw2_drv.value(0)
+   print("SW2 emulated press:", "LOW" if sw2_in.value()==0 else "HIGH")
+   ```
+   * Controlla che sw2_in.value() ritorni 0 (LOW) durante il pulse.
+   * Verifica che l’unità si accenda/spegna come con una pressione fisica.
+   3. (Opzionale) Collega un oscilloscopio alla linea SW2 per osservare il fronte netto grazie al feedback R9.
 
 ---
 
@@ -285,7 +285,7 @@ Goal
 Confermare che GPIO2 riceva un segnale a 1 Hz dall’MFP/SQW pin dell’RTC MCP7940M attraverso la rete R95 → D9 → R76.
 
 Test procedure
-```
+```python
 from machine import Pin, I2C
 import time
 
