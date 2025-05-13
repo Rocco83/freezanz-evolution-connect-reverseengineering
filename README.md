@@ -267,7 +267,7 @@ Verificare che **GPIO13** possa emulare la pressione del pulsante **SW2** (On/Of
    ```
    Deve stampare LOW quando premi.
 
-	3.	Emulazione: senza toccare il pulsante, esegui:
+3.	Emulazione: senza toccare il pulsante, esegui:
    ```python
    sw2_drv.value(1)
    time.sleep(0.2)
