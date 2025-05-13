@@ -49,10 +49,11 @@ Raccogliere e mantenere una descrizione completa di **pin‑out**, **connettori*
 | **P-**           | “PUMP N” – Return/ground for pump                                                   |
 | **B+**           | “BATT P” – Battery positive (internally tied to **P+**)                             |
 | **B-**           | “BATT N” – Battery negative                                                         |
-## IC29 — tentative identification
 
-**Package**: likely SOIC‑8 or MSOP‑8, marking “940MI SJ6”.
-The routing of **GPIO21 / GPIO22** (I²C) strongly suggests that **IC29 is an I²C real‑time clock (RTC)** — most plausibly the **Microchip MCP7940M**.
+## IC29 — identification
+
+**Package**: MCP7940M Low-Cost I2 C™ Real-Time Clock/Calendar with SRAM
+The routing of **GPIO21 / GPIO22** (I²C) go to the **IC29 is an I²C real‑time clock (RTC)**
 
 ### Associated timing element
 
@@ -60,7 +61,37 @@ The routing of **GPIO21 / GPIO22** (I²C) strongly suggests that **IC29 is an I
 | ------- | ---------- | ------------------------------ | ----------------------------------------------------------------- |
 | **Y2**  | “32 C 040” | 32.768 kHz tuning‑fork crystal | Pins X1/X2 of IC29 (through short tracks) — provides RTC timebase |
 
-*(On this PCB the crystal footprint uses the “Y” prefix; only the two outer pads are connected, centre pad is mechanical/N‑C).*
+### Identification steps taken
+
+```
+>>> from machine import Pin, I2C
+>>> import time
+>>>
+>>> i2c = I2C(0,            # use GPIO21/22 on the ESP32 board
+...           scl=Pin(22),
+...               sda=Pin(21),
+...           freq=100_000)
+>>>
+>>> print("IC addresses:", [hex(a) for a in i2c.scan()])
+IC addresses: ['0x6f']
+>>> def bcd2dec(x): return (x >> 4) * 10 + (x & 0x0F)
+...
+>>> for _ in range(8):
+...     sec = i2c.readfrom_mem(0x6F, 0x00, 1)[0] & 0x7F   # seconds reg., mask ST bit
+...     print("second =", bcd2dec(sec))
+...     time.sleep(1)
+...
+second = 38
+second = 39
+second = 40
+second = 41
+second = 42
+second = 43
+second = 44
+second = 45
+>>>
+```
+
 
 ### Hypotheses still to confirm
 
@@ -167,10 +198,10 @@ The routing of **GPIO21 / GPIO22** (I²C) strongly suggests that **IC29 is an I
 | 29 | IO5 | 5 | **P1‑1** | TBD input | Connettore P1 pin sinistro | Must be HIGH at boot | ⚠︎ |
 | 30 | IO18 | 18 | **LED D6** (Green) | Output | High = ON | — | ✔︎ |
 | 31 | IO19 | 19 | **LED D3** (Blue) | Output | High = ON | — | ✔︎ |
-| 33 | IO21 | 21 | **I²C to IC29** | I/O | Through **R455** (value? ≈290 Ω) then via network (series 290 Ω → node → **R69 220 Ω**) into IC29 pin ? (3rd from top‑left) | Default I²C **SDA** | ✔︎ |
+| 33 | IO21 | 21 | **I²C to IC29** | I/O | **SDA** which keep the clock through IC29 & Y2. Path: **R455** (290 Ω) Ω -> **R69 220 Ω** -> IC29 3rd pin from top‑left | Default I²C **SDA** | ✔︎ |
 | 34 | RXD0 | 3 | **UART RX0 (J1‑3)** | Input | 115 200 8N1 console | UART / flashing | ⚠︎ |
 | 35 | TXD0 | 1 | **UART TX0 (J1‑2)** | Output | 115 200 8N1 console | UART / flashing | ⚠︎ |
-| 36 | IO22 | 22 | **I²C to IC29** | I/O | Through **R452** (≈290 Ω) → shared node with IO21 → R69 220 Ω → IC29 | Default I²C **SCL** | ✔︎ |
+| 36 | IO22 | 22 | **I²C to IC29** | I/O | **SCL** which keep the clock through IC29 & Y2. Path: **R452** (290 Ω) -> **R69 220 Ω** → IC29 3rd pin from top‑left | Default I²C **SCL** | ✔︎ |
 | 37 | IO23 | 23 | **LED D7** (Green) | Output | High = ON | — | ✔︎ |
 | 38 | GND | — | — | — | Non usato sulla scheda (pad GND termico) | Ground | ✔︎ |
 
@@ -216,30 +247,6 @@ The routing of **GPIO21 / GPIO22** (I²C) strongly suggests that **IC29 is an I
 ### IO2 — unknown D9 network
 
 *(see above)*
-
----
-
-### IO21 / IO22 — IC29 I²C peripheral
-
-**Goal**
-Confirm that **GPIO21 (SDA)** and **GPIO22 (SCL)** communicate with IC29 (marked "940MI SJ6") via the series resistor network R455/R452 and R69.
-
-**Measurements**
-
-* Verify pull-up levels on the shared node (expect ≈3.3 V through external or internal pull‑ups of IC29).
-* Scan I²C bus (`Wire.scan()`) and note address(es). Compare with known parts (0x20‑0x27 GPIO expander, 0x48‑0x4F ADC, etc.).
-* If bus is idle high and toggling during operation, capture transactions with logic analyser to decode function.
-* Check IC29 supply pins with oscilloscope for switching (if DC‑DC controller) or static (if logic IC).
-
-**Hypotheses**
-
-| Possibility                       | Expected I²C address | Quick test                             |
-| --------------------------------- | -------------------- | -------------------------------------- |
-| GPIO expander (PCA9554A, TCA9555) | 0x20‑0x27            | Toggle LEDs via expander regs          |
-| ADC (MCP3021)                     | 0x48‑0x4F            | Read 12‑bit value changing with sensor |
-| Power monitor (INA219)            | 0x40‑0x45            | Inject load, look for current register |
-
-Add result to README once confirmed.
 
 ---
 
