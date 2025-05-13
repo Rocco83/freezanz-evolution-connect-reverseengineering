@@ -1,5 +1,7 @@
 # Freezanz **Zhalt Evolution Connect** — Reverse‑Engineering README
 
+# Attenzione: questo README è stato creato con ChatGPT e contiene degli errori, sopratutto tutti i voltaggi sono da verificare. Non è sicuro affidarsi a questo progetto, sopratutto per la parte elettrica.
+
 ## Avvertenza legale
 
 *Documento redatto esclusivamente a fini di studio, analisi tecnica e interoperabilità (art. 5 DLGS 518/92). L’autore declina ogni responsabilità per usi impropri o violazioni di licenze/marchi.*
