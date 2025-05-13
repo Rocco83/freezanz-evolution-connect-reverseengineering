@@ -182,7 +182,7 @@ second = 45
 | 13 | IO14 | 14 | — | — | Non usato | — | ✔︎ |
 | 14 | IO12 | 12 | N/C | — | Collegato a **R35** (N/C) | Strapping · LOW al boot | ⚠︎ |
 | 15 | GND | — | — | — | Non usato sulla scheda (pad GND) | Ground | ✔︎ |
-| 16 | IO13 | 13 | SPI flash interno | — | — | Strapping | ⚠︎ | Non disponibile |
+| 16 | IO13 | 13 | **IPOTESI** SW2_DRV (via Q4, accensione via software) - routing R27 -> R9 -> Q4 (piedino destro) -> Q4 (piedino centrale) -> R100 -> R71(?) -> Piedino vicino D11 SW2 ON/OFF | — | — | Strapping | ⚠︎ | Non disponibile |
 | 17 | SD2 | 9 | — | — | Non disponibile | SPI flash interno | ✗ |
 | 18 | SWP/SD3 | 10 | — | — | Non disponibile | SPI flash interno | ✗ |
 | 19 | SCS/CMD | 11 | — | — | Non disponibile | SPI flash interno | ✗ |
@@ -198,10 +198,10 @@ second = 45
 | 29 | IO5 | 5 | **P1‑1** | TBD input | Connettore P1 pin sinistro | Must be HIGH at boot | ⚠︎ |
 | 30 | IO18 | 18 | **LED D6** (Green) | Output | High = ON | — | ✔︎ |
 | 31 | IO19 | 19 | **LED D3** (Blue) | Output | High = ON | — | ✔︎ |
-| 33 | IO21 | 21 | **I²C to IC29** | I/O | **SDA** which keep the clock through IC29 & Y2. Path: **R455** (290 Ω) Ω -> **R69 220 Ω** -> IC29 3rd pin from top‑left | Default I²C **SDA** | ✔︎ |
+| 33 | IO21 | 21 | **RTC I²C SDA (addr 0x6F; clock ticking)** | I/O | **SDA** which keep the clock through IC29 & Y2. Path: **R455** (290 Ω) Ω -> **R69 220 Ω** -> IC29 3rd pin from top‑left | Default I²C **SDA** | ✔︎ |
 | 34 | RXD0 | 3 | **UART RX0 (J1‑3)** | Input | 115 200 8N1 console | UART / flashing | ⚠︎ |
 | 35 | TXD0 | 1 | **UART TX0 (J1‑2)** | Output | 115 200 8N1 console | UART / flashing | ⚠︎ |
-| 36 | IO22 | 22 | **I²C to IC29** | I/O | **SCL** which keep the clock through IC29 & Y2. Path: **R452** (290 Ω) -> **R69 220 Ω** → IC29 3rd pin from top‑left | Default I²C **SCL** | ✔︎ |
+| 36 | IO22 | 22 | **RTC I²C SCL (addr 0x6F; clock ticking)** | I/O | **SCL** which keep the clock through IC29 & Y2. Path: **R452** (290 Ω) -> **R69 220 Ω** → IC29 3rd pin from top‑left | Default I²C **SCL** | ✔︎ |
 | 37 | IO23 | 23 | **LED D7** (Green) | Output | High = ON | — | ✔︎ |
 | 38 | GND | — | — | — | Non usato sulla scheda (pad GND termico) | Ground | ✔︎ |
 
@@ -244,11 +244,81 @@ second = 45
 
 ## Tests to perform
 
-### IO2 — unknown D9 network
+### IO13 — Virtual ON/OFF Driver
 
-*(see above)*
+**Goal**
+Verificare che **GPIO13** possa emulare la pressione del pulsante **SW2** (On/Off) tramite il transistor Q4 (BC817-25).
+
+**Test procedure**
+1. Inizializza i pin in MicroPython:
+   ```python
+   from machine import Pin
+   import time
+
+   sw2_drv = Pin(13, Pin.OUT)
+   sw2_drv.value(0)                       # transistor inizialmente spento
+
+   sw2_in = Pin(33, Pin.IN, Pin.PULL_UP)  # legge lo stato del pulsante SW2
+```
+2. Baseline: premi fisicamente SW2 e verifica in REPL:
+```
+print("SW2 manual press:", "LOW" if sw2_in.value()==0 else "HIGH")
+```
+Deve stampare LOW quando premi.
+
+	3.	Emulazione: senza toccare il pulsante, esegui:
+```
+sw2_drv.value(1)
+time.sleep(0.2)
+sw2_drv.value(0)
+print("SW2 emulated press:", "LOW" if sw2_in.value()==0 else "HIGH")
+```
+ * Controlla che sw2_in.value() ritorni 0 (LOW) durante il pulse.
+ * Verifica che l’unità si accenda/spegna come con una pressione fisica.
+ 3. (Opzionale) Collega un oscilloscopio alla linea SW2 per osservare il fronte netto grazie al feedback R9.
 
 ---
+
+IO2 — RTC Square-Wave / Alarm Output
+
+Goal
+Confermare che GPIO2 riceva un segnale a 1 Hz dall’MFP/SQW pin dell’RTC MCP7940M attraverso la rete R95 → D9 → R76.
+
+Test procedure
+```
+from machine import Pin, I2C
+import time
+
+# 1) Inizializza I²C su GPIO21/22
+i2c = I2C(0, scl=Pin(22), sda=Pin(21), freq=100000)
+
+# 2) Abilita il square-wave 1 Hz (registro 0x07)
+addr = 0x6F
+ctrl = i2c.readfrom_mem(addr, 0x07, 1)[0]
+ctrl |= 0x10      # SQWE = 1 (enable square-wave)
+ctrl &= ~0x03     # RS = 00 (set 1 Hz)
+i2c.writeto_mem(addr, 0x6F, bytes([ctrl]))
+
+# 3) Conta i fronti su GPIO2
+pulse = Pin(2, Pin.IN)
+edges = 0
+def on_rise(pin):
+    global edges
+    edges += 1
+
+pulse.irq(trigger=Pin.IRQ_RISING, handler=on_rise)
+time.sleep(5)
+print("Edges in 5 s:", edges)  # Atteso ≈ 5
+```
+* Se conti circa 5 fronti in 5 s, il crystal e l’RTC funzionano.
+
+---
+
+Quando entrambi i test passano, l’emulazione del pulsante e il segnale RTC sono confermati.
+
+
+---
+
 
 ## TODO
 
