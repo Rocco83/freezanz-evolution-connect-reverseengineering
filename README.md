@@ -36,11 +36,11 @@ Raccogliere e mantenere una descrizione completa di **pin‑out**, **connettori*
 | Rif.            | Tipo / passo           | Pin ↓                        | Segnale         | Tensione       | Descrizione |
 |-----------------|------------------------|------------------------------|-----------------|----------------|-------|
 | **J1 (DC_IN)**  | Jack barrel (diameter TBD) | Tip = **V+**, Sleeve = GND | TBD (12 V ?)    | Ingresso alimentazione continua; negativo a massa, positivo protetto da **D1** e instradato al bus **P+** e **B+**, oltre a P1 via **H6** |
-| **PUMP**        | Fast-on 2 p            | **PUMP P / PUMP N**          | TBD (VCC)       | Pompa nebulizzatore (relè); usa la stessa VCC del jack J1 |
-| **BATT**        | Fast-on 2 p            | **B+ / B-**                  | TBD (12 V ?)    | Backup battery; **B+** è solidale alla rail **P+** |
+| **PUMP**        | Fast-on 2 p            | **PUMP P (P+) / PUMP N (P-)**          | TBD (VCC)       | Pompa nebulizzatore (?) usa la stessa VCC del jack J1, GND mediato da IO27 (da confermare) |
+| **BATT**        | Fast-on 2 p            | **BATT P (B+)  / BATT N (B-)**                  | TBD (12 V ?)    | Backup battery; **B+** è solidale alla rail **P+** |
 | **P1**          | JST-XH 3 p             | 1 = **VCC via H6**, 2 = GND, 3 = GPIO5 | TBD           | I/O esterno; **P+** su pin 1 tramite jumper **H6** |
-| **J3**          | Pin header 10 × 1 (NP) | 8 = **IO15** (via R89 470 Ω) | TBD             | Porta espansione riservata |
-| **J8 (LED_EXT)**| JST-XH 3 p             | TBD                          | TBD             | Connettore LED esterni |
+| **J3**          | Pin header 10 × 1 (NP) | 8 = **IO15** (via R89 470 Ω) | TBD             | Porta espansione - non collegata|
+| **J8 (LED_EXT)**| JST-XH 3 p             | TBD                          | TBD             | Connettore LED esterni - non collegato |
 
 ### Silkscreen power rail labels (bottom edge)
 | Label serigrafia | Rail / Signal                                                                       |
@@ -134,41 +134,40 @@ The routing of **GPIO21 / GPIO22** (I²C) strongly suggests that **IC29 is an I
 
 ## Pin‑out **ESP32‑WROOM‑32E** (basato su LME + mapping Freezanz)
 
-| Pin # | Pin Label  | GPIO | Safe to use? | Reason                                         | **Freezanz Function**     | Tipo            | Note                                                                                                                                                              |
-| ----- | ---------- | ---- | ------------ | ---------------------------------------------- | ------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 3     | **EN**     | —    | ⚠︎           | Chip enable / strapping                        | **Reset (CHIP\_EN)**      | Input           | J1‑5 · LOW ⇒ reset                                                                                                                                                |
-| 4     | SENSOR\_VP | 36   | ✗            | Input‑only                                     | —                         | ADC input       |  TBD — SW probe                                                                                                                                                   |
-| 5     | SENSOR\_VN | 39   | ✗            | Input‑only                                     | —                         | ADC input       |  TBD — SW probe                                                                                                                                                   |
-| 6     | IO34       | 34   | ✗            | Input‑only                                     | N/C                       | ADC / input     | Footprint **D5** (non popolato)                                                                                                                                   |
-| 7     | IO35       | 35   | ✗            | Input‑only                                     | N/C                       | ADC / input     | Footprint **D45** (non popolato)                                                                                                                                  |
-| 8     | IO32       | 32   | ✔︎           | —                                              | **SW3** (Start/Stop)      | Input (PULL‑UP) | Pulsante LOW ⇒ pressed                                                                                                                                            |
-| 9     | IO33       | 33   | ✔︎           | —                                              | **SW2** (On/Off)          | Input (PULL‑UP) | Pulsante LOW ⇒ pressed                                                                                                                                            |
-| 10    | IO25       | 25   | ✔︎           | —                                              | **LED D7** (Red)          | Output          | High = ON                                                                                                                                                         |
-| 11    | IO26       | 26   | ✔︎           | —                                              | **Buzzer**                | PWM Out         | Frequenza TBD                                                                                                                                                     |
-| 12    | IO27       | 27   | ✔︎           | —                                              | —                         | —               | Non usato                                                                                                                                                         |
-| 13    | IO14       | 14   | ✔︎           | —                                              | —                         | —               | Non usato                                                                                                                                                         |
-| 14    | IO12       | 12   | ⚠︎           | Strapping · LOW al boot                        | N/C                       | —               | Collegato a **R35** (N/C)                                                                                                                                         |
-| 16 | IO13 | 13 | ⚠︎ | Strapping pin & virtual ON/OFF driver | **SW2_DRV** | Open-collector output | Drives Q4 (BC817-25) via R27 1 kΩ to emulate SW2 press; feedback R9 13 kΩ |
-| 17    | SHD/SD2    | 9    | ✗            | SPI flash interno                              | —                         | —               | Non disponibile                                                                                                                                                   |
-| 18    | SWP/SD3    | 10   | ✗            | SPI flash interno                              | —                         | —               | Non disponibile                                                                                                                                                   |
-| 19    | SCS/CMD    | 11   | ✗            | SPI flash interno                              | —                         | —               | Non disponibile                                                                                                                                                   |
-| 20    | SCK/CLK    | 6    | ✗            | SPI flash interno                              | —                         | —               | Non disponibile                                                                                                                                                   |
-| 21    | SDO/SD0    | 7    | ✗            | SPI flash interno                              | —                         | —               | Non disponibile                                                                                                                                                   |
-| 22    | SDI/SD1    | 8    | ✗            | SPI flash interno                              | —                         | —               | Non disponibile                                                                                                                                                   |
-| 23    | IO15       | 15   | ⚠︎           | Boot‑strapping pin (must be **HIGH** at reset) | **Expansion line (J3‑8)** | I/O             | Via **R91** (not fitted) & **C30→GND**, then through **R89 470 Ω** to connector **J3‑pin 8** (header currently unpopulated) – reserved for future external signal |
-| 24    | IO2        | 2    | ⚠︎           | Must be LOW at boot (strapping)                | **Line via R95 → D9**     | I/O             | Series **R95 150 Ω** to node with **D9** and pulldown **R76 8.3 kΩ**; D9 centre via **R8 10 kΩ** to GND. Purpose TBD (possible indicator or external sense).      |
-| 25    | IO0        | 0    | ⚠︎           | Boot / flash mode                              | **BOOT (J1‑1)**           | Input           | LOW al reset ⇒ flash                                                                                                                                              |
-| 26    | IO4        | 4    | ✔︎           | —                                              | —                         | —               | Non usato                                                                                                                                                         |
-| 27    | IO16       | 16   | ✔︎           | —                                              | —                         | —               | Non usato                                                                                                                                                         |
-| 28    | IO17       | 17   | ✔︎           | —                                              | —                         | —               | Non usato                                                                                                                                                         |
-| 29    | IO5        | 5    | ⚠︎           | Must be HIGH at boot                           | **P1‑1**                  | TBD input       | Connettore P1 pin sinistro                                                                                                                                        |
-| 30    | IO18       | 18   | ✔︎           | —                                              | **LED D6** (Green)        | Output          | High = ON                                                                                                                                                         |
-| 31    | IO19       | 19   | ✔︎           | —                                              | **LED D3** (Blue)         | Output          | High = ON                                                                                                                                                         |
-| 33    | IO21       | 21   | ✔︎           | Default I²C **SDA**                            | **I²C to IC29**           | I/O             | Through **R455** (value? ≈290 Ω) then via network (series 290 Ω → node → **R69 220 Ω**) into IC29 pin ? (3rd from top‑left)                                       |
-| 34    | RXD0       | 3    | ⚠︎           | UART / flashing                                | **UART RX0 (J1‑3)**       | Input           | 115 200 8N1 console                                                                                                                                               |
-| 35    | TXD0       | 1    | ⚠︎           | UART / flashing                                | **UART TX0 (J1‑2)**       | Output          | 115 200 8N1 console                                                                                                                                               |
-| 36    | IO22       | 22   | ✔︎           | Default I²C **SCL**                            | **I²C to IC29**           | I/O             | Through **R452** (≈290 Ω) → shared node with IO21 → R69 220 Ω → IC29                                                                                              |
-| 37    | IO23       | 23   | ✔︎           | —                                              | **LED D7** (Green)        | Output          | High = ON                                                                                                                                                         |
+| Pin # | Pin Label | GPIO | Safe to use? | Reason | **Freezanz Function** | Tipo | Note |
+| - | ---------- | ---- | ------------ | ----------- | ------------------------- | --------------- | ------ |
+| 3 | **EN** | — | ⚠︎ | Chip enable / strapping | **Reset (CHIP_EN)** | Input | J1‑5 · LOW ⇒ reset   |
+| 4 | SENSOR\_VP | 36 | ✗ | Input‑only | — | ADC input |  TBD — SW probe   |
+| 5 | SENSOR\_VN | 39 | ✗ | Input‑only | — | ADC input |  TBD — SW probe   |
+| 6 | IO34 | 34 | ✗ | Input‑only | N/C | ADC / input | Footprint **D5** (non popolato)   |
+| 7 | IO35 | 35 | ✗ | Input‑only | N/C | ADC / input | Footprint **D45** (non popolato)   |
+| 8 | IO32 | 32 | ✔︎ | — | **SW3** (Start/Stop) | Input (PULL‑UP) | Pulsante LOW ⇒ pressed   |
+| 9 | IO33 | 33 | ✔︎ | — | **SW2** (On/Off) | Input (PULL‑UP) | Pulsante LOW ⇒ pressed |
+| 10 | IO25 | 25 | ✔︎ | — | **LED D7** (Red) | Output | High = ON |
+| 11 | IO26 | 26 | ✔︎ | — | **Buzzer** | PWM Out | Frequenza TBD |
+| 12 | IO27 | 27 | ✔︎ | — | — | — | R24->R23->Q7->X20->P- |
+| 13 | IO14 | 14 | ✔︎ | — | — | — | Non usato |
+| 14 | IO12 | 12 | ⚠︎ | Strapping · LOW al boot | N/C | — | Collegato a **R35** (N/C) |
+| 16 | IO13 | 13 | ⚠︎ | Strapping | SPI flash interno | — | — | Non disponibile |
+| 18 | SWP/SD3 | 10 | ✗ | SPI flash interno | — | — | Non disponibile |
+| 19 | SCS/CMD | 11 | ✗ | SPI flash interno | — | — | Non disponibile |
+| 20 | SCK/CLK | 6 | ✗ | SPI flash interno | — | — | Non disponibile |
+| 21 | SDO/SD0 | 7 | ✗ | SPI flash interno | — | — | Non disponibile |
+| 22 | SDI/SD1 | 8 | ✗ | SPI flash interno | — | — | Non disponibile |
+| 23 | IO15 | 15 | ⚠︎ | Boot‑strapping pin (must be **HIGH** at reset) | **Expansion line (J3‑8)** | I/O | Via **R91** (not fitted) & **C30→GND**, then through **R89 470 Ω** to connector **J3‑pin 8** (header currently unpopulated) – reserved for future external signal |
+| 24 | IO2 | 2 | ⚠︎ | Must be LOW at boot (strapping) | **Line via R95 → D9** | I/O | Series **R95 150 Ω** to node with **D9** and pulldown **R76 8.3 kΩ**; D9 centre via **R8 10 kΩ** to GND. Purpose TBD (possible indicator or external sense). |
+| 25 | IO0 | 0 | ⚠︎ | Boot / flash mode | **BOOT (J1‑1)** | Input | LOW al reset ⇒ flash |
+| 26 | IO4 | 4 | ✔︎ | — | — | — | Non usato |
+| 27 | IO16 | 16 | ✔︎ | — | — | — | Non usato |
+| 28 | IO17 | 17 | ✔︎ | — | — | — | Non usato |
+| 29 | IO5 | 5 | ⚠︎ | Must be HIGH at boot | **P1‑1** | TBD input | Connettore P1 pin sinistro |
+| 30 | IO18 | 18 | ✔︎ | — | **LED D6** (Green) | Output | High = ON |
+| 31 | IO19 | 19 | ✔︎ | — | **LED D3** (Blue) | Output | High = ON |
+| 33 | IO21 | 21 | ✔︎ | Default I²C **SDA** | **I²C to IC29** | I/O | Through **R455** (value? ≈290 Ω) then via network (series 290 Ω → node → **R69 220 Ω**) into IC29 pin ? (3rd from top‑left) |
+| 34 | RXD0 | 3 | ⚠︎ | UART / flashing | **UART RX0 (J1‑3)** | Input | 115 200 8N1 console |
+| 35 | TXD0 | 1 | ⚠︎ | UART / flashing | **UART TX0 (J1‑2)** | Output | 115 200 8N1 console |
+| 36 | IO22 | 22 | ✔︎ | Default I²C **SCL** | **I²C to IC29** | I/O | Through **R452** (≈290 Ω) → shared node with IO21 → R69 220 Ω → IC29 |
+| 37 | IO23 | 23 | ✔︎ | — | **LED D7** (Green) | Output | High = ON |
 
 ---
 
