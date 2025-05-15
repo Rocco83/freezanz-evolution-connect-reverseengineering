@@ -1,7 +1,5 @@
 # Freezanz **Zhalt Evolution Connect** — Reverse‑Engineering README
 
-# Attenzione: questo README è stato creato con ChatGPT e contiene degli errori, sopratutto tutti i voltaggi sono da verificare. Non è sicuro affidarsi a questo progetto, sopratutto per la parte elettrica.
-
 ## Avvertenza legale
 
 *Documento redatto esclusivamente a fini di studio, analisi tecnica e interoperabilità (art. 5 DLGS 518/92). L’autore declina ogni responsabilità per usi impropri o violazioni di licenze/marchi.*
@@ -327,7 +325,6 @@ Quando entrambi i test passano, l’emulazione del pulsante e il segnale RTC son
 
 * [ ] Investigate **IO15 / J3‑8** expansion line: measure the default voltage, test with external pull‑down/up through R89, and determine intended peripheral use.
 * [ ] SENSOR\_VP/VN: log ADC values in real operation.
-* [ ] Confirm LED D7 green on GPIO23.
 * [ ] Characterize PWM buzzer on GPIO26.
 * [ ] Phase‑2 test: board re‑installed in unit.
 * [ ] Draw partial schematic in KiCad.
