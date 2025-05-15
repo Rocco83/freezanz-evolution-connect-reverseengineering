@@ -18,7 +18,7 @@ Raccogliere e mantenere una descrizione completa di **pin‑out**, **connettori*
 
 | Versione | Data (EU/Rome) | Autore               | Note brevi                                                                   |
 | -------- | -------------- | -------------------- | ---------------------------------------------------------------------------- |
-| 0.5      | 2025‑05‑13     | ChatGPT + <tuo nome> | Sostituita tabella pin‑out ESP32 con layout basato su LME + mapping Freezanz |
+| 0.5      | 2025‑05‑13     | ChatGPT + <tuo nome> | Sostituita tabella pin‑out ESP32 con layout basato su LastMinuteEngineer + mapping Freezanz |
 
 ---
 
@@ -36,8 +36,8 @@ Raccogliere e mantenere una descrizione completa di **pin‑out**, **connettori*
 | Rif.            | Tipo / passo           | Pin ↓                        | Segnale         | Tensione       | Descrizione |
 |-----------------|------------------------|------------------------------|-----------------|----------------|-------|
 | **J1 (DC_IN)**  | Jack barrel (diameter TBD) | Tip = **V+**, Sleeve = GND | TBD (12 V ?)    | Ingresso alimentazione continua; negativo a massa, positivo protetto da **D1** e instradato al bus **P+** e **B+**, oltre a P1 via **H6** |
-| **PUMP**        | Fast-on 2 p            | **PUMP P (P+) / PUMP N (P-)**          | TBD (VCC)       | Pompa nebulizzatore (?) usa la stessa VCC del jack J1, GND mediato da IO27 (da confermare) |
-| **BATT**        | Fast-on 2 p            | **BATT P (B+)  / BATT N (B-)**                  | TBD (12 V ?)    | Backup battery; **B+** è solidale alla rail **P+** |
+| **PUMP**        | Fast-on 2 p            | **PUMP P (P+) / PUMP N (P-)**   | 12 VCC | Rele` pompa nebulizzatore usa la stessa VCC del jack J1, GND mediato da IO27 (da confermare) |
+| **BATT**        | Fast-on 2 p            | **BATT P (B+)  / BATT N (B-)**  | 12 VCC | Backup battery (condensatore 16V 68000 uF); **B+** è solidale alla rail **P+** |
 | **P1**          | JST-XH 3 p             | 1 = **VCC via H6**, 2 = GND, 3 = GPIO5 | TBD           | I/O esterno; **P+** su pin 1 tramite jumper **H6** |
 | **J3**          | Pin header 10 × 1 (NP) | 8 = **IO15** (via R89 470 Ω) | TBD             | Porta espansione - non collegata|
 | **J8 (LED_EXT)**| JST-XH 3 p             | TBD                          | TBD             | Connettore LED esterni - non collegato |
@@ -151,7 +151,7 @@ second = 45
 | 1      | **BOOT / GPIO0** | — (strap)             | Pin 25     | LOW all’accensione → bootloader     |
 | 2      | **TX0 / GPIO1**  | RX FTDI               | Pin 35     | UART console 115 200 8N1            |
 | 3      | **RX0 / GPIO3**  | TX FTDI               | Pin 34     | UART console                        |
-| 4      | **VCC 3 V 3**    | 3 V 3 FTDI (≥ 500 mA) | —          | Alimenta la logica durante il flash |
+| 4      | **VCC 3,3V**    | 3 V 3 FTDI (≥ 500 mA) | —          | Alimenta la logica durante il flash |
 | 5      | **EN / RESET**   | —                     | Pin 3      | CHIP\_EN — LOW ⇒ reset              |
 | 6      | **GND**          | GND FTDI              | —          | Riferimento comune                  |
 
@@ -163,7 +163,7 @@ second = 45
 
 ---
 
-## Pin‑out **ESP32‑WROOM‑32E** (basato su LME + mapping Freezanz)
+## Pin‑out **ESP32‑WROOM‑32E** (basato su LastMinuteEngineer + mapping Freezanz)
 
 | Pin # | Pin Label | GPIO |**Freezanz Function** |Tipo |Note |Reason |Safe to use? |
 | - | ---------- | ---- |------------------------- |--------------- |------ |----------- |------------ |
@@ -179,7 +179,7 @@ second = 45
 | 10 | IO25 | 25 | **LED D7** (Red) | Output | High = ON | — | ✔︎ |
 | 11 | IO26 | 26 | **Buzzer** | PWM Out | Frequenza TBD | — | ✔︎ |
 | 12 | IO27 | 27 | — | — | R24->R23->Q7->X20->P- | — | ✔︎ |
-| 13 | IO14 | 14 | — | — | Non usato | — | ✔︎ |
+| 13 | IO14 | 14 | — | — | Non usato (VERIFICARE) | — | ✔︎ |
 | 14 | IO12 | 12 | N/C | — | Collegato a **R35** (N/C) | Strapping · LOW al boot | ⚠︎ |
 | 15 | GND | — | — | — | Non usato sulla scheda (pad GND) | Ground | ✔︎ |
 | 16 | IO13 | 13 | **IPOTESI** SW2_DRV (via Q4, accensione via software) - routing R27 -> R9 -> Q4 (piedino destro) -> Q4 (piedino centrale) -> R100 -> R71(?) -> Piedino vicino D11 SW2 ON/OFF | — | — | Strapping | ⚠︎ | Non disponibile |
@@ -238,7 +238,7 @@ second = 45
 
 | Jumper | Default           | Collega                  | Funzione                                                            |
 |--------|-------------------|--------------------------|---------------------------------------------------------------------|
-| **H6** | CHIUSO (fabbrica) | **P1-3 (P+)** ↔ **VCC**  | Collega il pin 3 del connettore P1 alla linea VCC (DC_IN/BATT P); aprirlo isola P1 dalla VCC esterna |
+| **H6** | CHIUSO (fabbrica) | **P1-3 (P+)** ↔ **12 VCC**  | Collega il pin 3 del connettore P1 alla linea VCC (DC_IN/BATT P); aprirlo isola P1 dalla VCC esterna |
 
 ---
 
