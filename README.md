@@ -175,7 +175,7 @@ second = 45
 | 8 | IO32 | 32 | **SW3** (Start/Stop) | Input (PULL‑UP) | Pulsante LOW ⇒ pressed   | — | ✔︎ |
 | 9 | IO33 | 33 | **SW2** (On/Off) | Input (PULL‑UP) | Pulsante LOW ⇒ pressed | — | ✔︎ |
 | 10 | IO25 | 25 | **LED D7** (Red) | Output | High = ON | — | ✔︎ |
-| 11 | IO26 | 26 | **Buzzer** | PWM Out | Frequenza TBD | — | ✔︎ |
+| 11 | IO26 | 26 | **Buzzer** | PWM Out | PWM Out (frequenze udibili testate: 1.5 / 2.5 / 3 / 4 / 5 kHz) | — | ✔︎ |
 | 12 | IO27 | 27 | — | — | R24->R23->Q7->X20->P- | — | ✔︎ |
 | 13 | IO14 | 14 | — | — | Non usato (VERIFICARE) | — | ✔︎ |
 | 14 | IO12 | 12 | N/C | — | Collegato a **R35** (N/C) | Strapping · LOW al boot | ⚠︎ |
@@ -325,7 +325,6 @@ Quando entrambi i test passano, l’emulazione del pulsante e il segnale RTC son
 
 * [ ] Investigate **IO15 / J3‑8** expansion line: measure the default voltage, test with external pull‑down/up through R89, and determine intended peripheral use.
 * [ ] SENSOR\_VP/VN: log ADC values in real operation.
-* [ ] Characterize PWM buzzer on GPIO26.
 * [ ] Phase‑2 test: board re‑installed in unit.
 * [ ] Draw partial schematic in KiCad.
 * [ ] Document P1 signal P+ after trace.
