@@ -1,0 +1,73 @@
+esphome:
+  # Hostname for the device; mac_suffix differentiates multiple units
+  name: espfreezanz
+  friendly_name: Freezanz
+
+esp32:
+  board: esp32-c6-devkitm-1
+  framework:
+    type: esp-idf
+
+# Enable logging via UART
+logger:
+
+# default HA integration, OTA updater and backup http web portal
+api:
+  # TODO increase the security
+  # password: !secret device_password
+  #encryption:
+  #  key: "YOUR_ENCRYPTION_KEY"
+  # 5m default delay. if no home assistant, then force reboot
+  reboot_timeout: 0s
+
+# OTA update support
+ota:
+  - platform: esphome
+  # TODO increase the security
+  # password: !secret device_password
+  # change to https://esphome.io/components/ota/http_request ?
+
+wifi:
+  networks:
+    - ssid: !secret wifi_1_ssid
+      password: !secret wifi_1_password
+    - ssid: !secret wifi_2_ssid
+      password: !secret wifi_2_password
+  post_connect_roaming: true
+
+# Local diagnostic web portal
+web_server:
+  port: 80
+  version: 3
+
+# ---------------------------------------------------------------------------
+# UTILITY
+# ---------------------------------------------------------------------------
+button:
+  - platform: restart
+    name: "ESPHome Restart"
+    entity_category: "config"
+
+text_sensor:
+  - platform: version
+    name: "Freezanz ESPHome Version"
+    icon: mdi:information
+    hide_timestamp: true
+
+  - platform: wifi_info
+    ip_address:
+      name: "Freezanz IP Address"
+    mac_address:
+      name: "Freezanz MAC Address"
+
+sensor:
+  - platform: wifi_signal
+    name: "WiFi Signal (RSSI)"
+    update_interval: 60s
+    entity_category: "diagnostic"
+
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: "Europe/Rome"
+
