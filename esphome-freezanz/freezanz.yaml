@@ -16,12 +16,10 @@ esphome:
             ESP_LOGI("boot", "Device was OFF, LED green D7 stays off");
           }
 
-
 esp32:
   board: esp32dev
   framework:
     type: esp-idf
-    #type: arduino
 
 # Enable logging via UART
 logger:
@@ -65,43 +63,76 @@ web_server:
 # UTILITY
 # ---------------------------------------------------------------------------
 
+# Test controls
 button:
   - platform: restart
     name: "ESPHome Restart"
     entity_category: "config"
+  - platform: template
+    name: "Clear Stored States"
+    id: clear_states_button
+    icon: "mdi:database-remove"
+    entity_category: "config"
+    on_press:
+      then:
+        - lambda: |-
+            global_preferences->reset();
+            ESP_LOGI("custom", "NVM Memory Cleared! Restarting...");
+        - delay: 1s
+        # This is the correct way to reboot via code
+        - lambda: 'App.safe_reboot();'
 
   - platform: output
-    name: "SW ON/OFF"
+    name: "SW ON⁄OFF"
     id: sw_onoff_switch
     output: sw_onoff
     duration: 200ms
+    entity_category: "diagnostic"
 
-  - platform: output
-    name: "SW Pompa ON"
+  - platform: template
+    name: "SW Pompa ON⁄OFF"
     id: sw_pompa_on_switch
-    output: sw_pompa_on
-    duration: 200ms
+    entity_category: ""
+    on_press:
+      then:
+        - lambda: |-
+            if (!id(device_on)) {
+              ESP_LOGW("pompa", "Device is OFF, blocking pump activation");
+              return;
+            }
+            if (id(pompa_running)) {
+              ESP_LOGI("pompa", "Pump running — stopping");
+              id(pompa_start).stop();
+              id(pompa_stop).stop();
+              id(pompa_force_stop).execute();
+              return;
+            }
+            id(pompa_start).execute();
 
   - platform: template
     name: "Buzzer ON sequence"
+    entity_category: "diagnostic"
     on_press:
       then:
         - script.execute: buzzer_on_sequence
 
   - platform: template
     name: "Buzzer OFF sequence"
+    entity_category: "diagnostic"
     on_press:
       then:
         - script.execute: buzzer_off_sequence
 
   - platform: template
     name: "Buzzer Alarm sequence"
+    entity_category: "diagnostic"
     on_press:
       then:
         - script.execute: buzzer_start_sequence
 
   - platform: template
     name: "Buzzer Stop sequence"
+    entity_category: "diagnostic"
     on_press:
       then:
         - script.execute: buzzer_stop_sequence
@@ -131,6 +162,7 @@ sensor:
     update_interval: 10s
     accuracy_decimals: 0
     unit_of_measurement: "events"
+    entity_category: "diagnostic"
 
   - platform: pulse_counter
     pin:
@@ -142,6 +174,7 @@ sensor:
     id: debug_gpio2_pulse
     update_interval: 5s
     # At 1Hz square wave, expect ~5 pulses every 5s
+    entity_category: "diagnostic"
 
   # GPIO36 (SENSOR_VP) — input-only ADC, no pullup available
   - platform: adc
@@ -150,6 +183,7 @@ sensor:
     id: debug_adc36
     update_interval: 5s
     attenuation: 11db
+    entity_category: "diagnostic"
 
   # GPIO39 (SENSOR_VN) — input-only ADC, no pullup available
   - platform: adc
@@ -158,6 +192,7 @@ sensor:
     id: debug_adc39
     update_interval: 5s
     attenuation: 11db
+    entity_category: "diagnostic"
 
   # GPIO34 — input-only ADC (footprint D5, unpopulated)
   - platform: adc
@@ -166,6 +201,7 @@ sensor:
     id: debug_adc34
     update_interval: 5s
     attenuation: 11db
+    entity_category: "diagnostic"
 
   # GPIO35 — input-only ADC (footprint D45, unpopulated)
   - platform: adc
@@ -174,6 +210,7 @@ sensor:
     id: debug_adc35
     update_interval: 5s
     attenuation: 11db
+    entity_category: "diagnostic"
 
 #time:
 #  - platform: sntp
@@ -192,7 +229,8 @@ binary_sensor:
         input: true
         pullup: true
       inverted: true
-    name: "Button ON/OFF"
+    name: "Button ON⁄OFF"
+    entity_category: ""
     id: btn_onoff
     filters:
       - delayed_on: 20ms
@@ -220,11 +258,26 @@ binary_sensor:
         input: true
         pullup: true
       inverted: true
-    name: "Button Start/Stop"
+    name: "Button Start⁄Stop"
     id: btn_startstop
     filters:
       - delayed_on: 20ms
       - delayed_off: 20ms
+    on_press:
+      then:
+        - lambda: |-
+            if (!id(device_on)) {
+              ESP_LOGW("pompa", "Device is OFF, blocking pump activation");
+              return;
+            }
+            if (id(pompa_running)) {
+              ESP_LOGI("pompa", "Pump running — stopping");
+              id(pompa_start).stop();
+              id(pompa_stop).stop();
+              id(pompa_force_stop).execute();
+              return;
+            }
+            id(pompa_start).execute();
 
 #  - platform: gpio
 #    pin:
@@ -247,6 +300,7 @@ binary_sensor:
         pullup: true
     name: "Debug GPIO4"
     id: debug_gpio4
+    entity_category: "diagnostic"
 
   # GPIO5 — P1 connector external I/O (boot strapping: must be HIGH at boot)
   - platform: gpio
@@ -255,6 +309,7 @@ binary_sensor:
       mode:
         input: true
         pullup: true
+      inverted: true
     name: "GPIO5 P1 - mancanza acqua"
     id: debug_gpio5
     filters:
@@ -279,6 +334,7 @@ binary_sensor:
         pullup: true
     name: "Debug GPIO14"
     id: debug_gpio14
+    entity_category: "diagnostic"
 
   # GPIO16 — unused
   - platform: gpio
@@ -289,6 +345,7 @@ binary_sensor:
         pullup: true
     name: "Debug GPIO16"
     id: debug_gpio16
+    entity_category: "diagnostic"
 
   # GPIO17 — unused
   - platform: gpio
@@ -299,6 +356,7 @@ binary_sensor:
         pullup: true
     name: "Debug GPIO17"
     id: debug_gpio17
+    entity_category: "diagnostic"
 
 output:
   # D6 — LED Verde (nebulizzazione in corso)
@@ -359,46 +417,49 @@ select:
             // Update LEDC frequency from dropdown selection
             float freq = atof(x.c_str());
             id(out_buzzer).update_frequency(freq);
+  - platform: template
+    name: "Buzzer Volume"
+    id: buzzer_volume_select
+    options:
+      - "basso"
+      - "medio"
+      - "alto"
+    initial_option: "medio"
+    optimistic: true
+    on_value:
+      then:
+        - lambda: |-
+            if (x == "basso") { id(buzzer_duty) = 0.1; }
+            if (x == "medio") { id(buzzer_duty) = 0.3; }
+            if (x == "alto")  { id(buzzer_duty) = 0.5; }
+            ESP_LOGI("buzzer", "Volume set to %s (duty=%.1f)", x.c_str(), id(buzzer_duty));
 
 switch:
   - platform: template
     name: "Buzzer Enable"
-    id: buzzer_enable
+    id: buzzer_enable_switch
+    lambda: return id(buzzer_enabled);
+    turn_on_action:
+      - lambda: |-
+          id(buzzer_enabled) = true;
+          ESP_LOGI("buzzer", "Buzzer enabled");
+    turn_off_action:
+      - lambda: |-
+          id(buzzer_enabled) = false;
+          ESP_LOGI("buzzer", "Buzzer disabled");
+
+  - platform: template
+    name: "Buzzer Test"
+    id: buzzer_test
     optimistic: true
     on_turn_on:
       - output.set_level:
           id: out_buzzer
-          level: 50%   # 50% duty cycle = max volume for piezo
+          level: 50%   # 50% duty cycle = turn on - can't regulate it
     on_turn_off:
       - output.set_level:
           id: out_buzzer
           level: 0%
-
-  - platform: output
-    name: "SW ON/OFF"
-    id: sw_onoff_switch
-    output: sw_onoff
-
-  - platform: output
-    name: "SW Pompa ON"
-    id: sw_pompa_on_switch
-    output: sw_pompa_on
-    on_turn_on:
-      then:
-        - switch.turn_on: sw_led_green_d6
-        - lambda: |-
-            // Block pump if device is OFF
-            if (!id(device_on)) {
-              ESP_LOGW("pompa", "Device is OFF, blocking pump activation");
-              id(sw_pompa_on_switch).turn_off();
-              return;
-            }
-            ESP_LOGI("pompa", "Pump ON");
-    on_turn_off:
-      then:
-        - switch.turn_off: sw_led_green_d6
-        - lambda: |-
-            ESP_LOGI("pompa", "Pump OFF");
 
   - platform: output
     name: "LED Verde Nebulizzazione D6"
@@ -438,12 +499,41 @@ globals:
     type: bool
     restore_value: yes
     initial_value: 'false'
+  - id: pompa_running
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+  - id: pompa_duration
+    type: int
+    restore_value: yes
+    initial_value: '10'
+  - id: buzzer_enabled
+    type: bool
+    restore_value: yes
+    initial_value: 'true'
+  - id: buzzer_duty
+    type: float
+    restore_value: yes
+    initial_value: '0.3'
   - id: gpio5_low_count
     type: int
     restore_value: yes
     initial_value: '0'
 
-
+number:
+  - platform: template
+    name: "Pompa Durata (secondi)"
+    id: pompa_duration_number
+    min_value: 10
+    max_value: 120
+    step: 5
+    unit_of_measurement: "s"
+    mode: slider
+    lambda: return id(pompa_duration);
+    set_action:
+      - lambda: |-
+          id(pompa_duration) = (int)x;
+          ESP_LOGI("pompa", "Duration set to %ds", id(pompa_duration));
 
 script:
   - id: rtc_write_time
@@ -546,8 +636,63 @@ script:
             s->tm_year + 1900, s->tm_mon + 1, s->tm_mday,
             s->tm_hour, s->tm_min, s->tm_sec);
 
+  - id: pompa_start
+    then:
+      - script.execute: buzzer_start_sequence
+      - wait_until:
+          condition:
+            lambda: return !id(buzzer_start_sequence).is_running();
+
+      - lambda: |-
+          if (!id(device_on)) {
+            ESP_LOGW("pompa", "Device turned OFF during start sequence, aborting");
+            id(pompa_start).stop();
+            return;
+          }
+
+      - lambda: |-
+          ESP_LOGI("pompa", "Pump ON — %ds cycle", id(pompa_duration));
+          id(pompa_running) = true;
+          id(out_led_green_d6).turn_on();
+          id(sw_pompa_on).turn_on();
+
+      - delay: !lambda return id(pompa_duration) * 1000;  // ms
+
+      - script.execute: pompa_stop
+
+  - id: pompa_stop
+    then:
+      - output.set_level:
+          id: out_buzzer
+          level: 0%
+      - script.execute: buzzer_stop_sequence
+      - lambda: |-
+          ESP_LOGI("pompa", "Pump OFF — cycle complete");
+          id(pompa_running) = false;
+          id(sw_pompa_on).turn_off();
+          id(out_led_green_d6).turn_off();
+      - script.execute: buzzer_stop_sequence
+
+  - id: pompa_force_stop
+    then:
+      - output.set_level:
+          id: out_buzzer
+          level: 0%
+      - lambda: |-
+          ESP_LOGI("pompa", "Pump force stopped");
+          id(pompa_running) = false;
+          id(sw_pompa_on).turn_off();
+          id(out_led_green_d6).turn_off();
+      - script.execute: buzzer_stop_sequence
+
   - id: buzzer_on_sequence
     then:
+      - lambda: |-
+          if (!id(buzzer_enabled)) {
+            ESP_LOGI("buzzer", "Buzzer disabled, skipping");
+            id(buzzer_on_sequence).stop();
+            return;
+          }
       # Three short rising-pitch beeps — power on confirmation
       - output.ledc.set_frequency:
           id: out_buzzer
@@ -586,25 +731,38 @@ script:
 
   - id: buzzer_off_sequence
     then:
+      - lambda: |-
+          if (!id(buzzer_enabled)) {
+            ESP_LOGI("buzzer", "Buzzer disabled, skipping");
+            id(buzzer_on_sequence).stop();
+            return;
+          }
       - output.ledc.set_frequency:
           id: out_buzzer
           frequency: 2500Hz
       - output.set_level:
           id: out_buzzer
           level: 50%
-      - delay: 2770ms
+      - delay: 100ms
       - output.set_level:
           id: out_buzzer
           level: 0%
 
   - id: buzzer_stop_sequence
     then:
+      - lambda: |-
+          if (!id(buzzer_enabled)) {
+            ESP_LOGI("buzzer", "Buzzer disabled, skipping");
+            id(buzzer_on_sequence).stop();
+            return;
+          }
       - output.ledc.set_frequency:
           id: out_buzzer
           frequency: 2200Hz
       - output.set_level:
           id: out_buzzer
-          level: 50%
+          #level: 50%
+          level: !lambda return id(buzzer_duty);
       - delay: 500ms
       - output.set_level:
           id: out_buzzer
@@ -612,6 +770,12 @@ script:
 
   - id: buzzer_start_sequence
     then:
+      - lambda: |-
+          if (!id(buzzer_enabled)) {
+            ESP_LOGI("buzzer", "Buzzer disabled, skipping");
+            id(buzzer_on_sequence).stop();
+            return;
+          }
       # Initial long beep
       - output.set_level:
           id: out_buzzer
@@ -681,15 +845,15 @@ script:
       - output.set_level: { id: out_buzzer, level: 0% }
       - delay: 30ms
 
-      # Two final long beeps
-      - output.set_level: { id: out_buzzer, level: 50% }
-      - delay: 450ms
-      - output.set_level: { id: out_buzzer, level: 0% }
-      - delay: 10ms
-
-      - output.set_level: { id: out_buzzer, level: 50% }
-      - delay: 1130ms
-      - output.set_level: { id: out_buzzer, level: 0% }
+#      # Two final long beeps
+#      - output.set_level: { id: out_buzzer, level: 50% }
+#      - delay: 450ms
+#      - output.set_level: { id: out_buzzer, level: 0% }
+#      - delay: 10ms
+#
+#      - output.set_level: { id: out_buzzer, level: 50% }
+#      - delay: 1130ms
+#      - output.set_level: { id: out_buzzer, level: 0% }
 
 interval:
   - interval: 60s
