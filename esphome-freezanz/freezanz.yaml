@@ -6,6 +6,16 @@ esphome:
     priority: 600
     then:
       - script.execute: rtc_read_time
+      - lambda: |-
+          // Restore LED state based on device_on global
+          if (id(device_on)) {
+            id(sw_led_green_d7).turn_on();
+            ESP_LOGI("boot", "Device was ON, restoring LED green D7");
+          } else {
+            id(sw_led_green_d7).turn_off();
+            ESP_LOGI("boot", "Device was OFF, LED green D7 stays off");
+          }
+
 
 esp32:
   board: esp32dev
@@ -39,6 +49,12 @@ wifi:
     - ssid: !secret wifi_2_ssid
       password: !secret wifi_2_password
   post_connect_roaming: true
+  on_connect:
+    then:
+      - switch.turn_on: sw_led_blue_d3
+  on_disconnect:
+    then:
+      - switch.turn_off: sw_led_blue_d3
 
 # Local diagnostic web portal
 web_server:
@@ -48,10 +64,47 @@ web_server:
 # ---------------------------------------------------------------------------
 # UTILITY
 # ---------------------------------------------------------------------------
+
 button:
   - platform: restart
     name: "ESPHome Restart"
     entity_category: "config"
+
+  - platform: output
+    name: "SW ON/OFF"
+    id: sw_onoff_switch
+    output: sw_onoff
+    duration: 200ms
+
+  - platform: output
+    name: "SW Pompa ON"
+    id: sw_pompa_on_switch
+    output: sw_pompa_on
+    duration: 200ms
+
+  - platform: template
+    name: "Buzzer ON sequence"
+    on_press:
+      then:
+        - script.execute: buzzer_on_sequence
+
+  - platform: template
+    name: "Buzzer OFF sequence"
+    on_press:
+      then:
+        - script.execute: buzzer_off_sequence
+
+  - platform: template
+    name: "Buzzer Alarm sequence"
+    on_press:
+      then:
+        - script.execute: buzzer_start_sequence
+
+  - platform: template
+    name: "Buzzer Stop sequence"
+    on_press:
+      then:
+        - script.execute: buzzer_stop_sequence
 
 text_sensor:
   - platform: version
@@ -71,13 +124,64 @@ sensor:
     update_interval: 60s
     entity_category: "diagnostic"
 
-time:
-  - platform: sntp
-    id: sntp_time
-    timezone: "Europe/Rome"
-    on_time_sync:
-      then:
-        - script.execute: rtc_write_time
+  - platform: template
+    name: "GPIO5 P1 Low Count"
+    id: gpio5_low_count_sensor
+    lambda: return id(gpio5_low_count);
+    update_interval: 10s
+    accuracy_decimals: 0
+    unit_of_measurement: "events"
+
+  - platform: pulse_counter
+    pin:
+      number: GPIO2
+      mode:
+        input: true
+        pullup: true
+    name: "Debug GPIO2 RTC SQW pulse"
+    id: debug_gpio2_pulse
+    update_interval: 5s
+    # At 1Hz square wave, expect ~5 pulses every 5s
+
+  # GPIO36 (SENSOR_VP) — input-only ADC, no pullup available
+  - platform: adc
+    pin: GPIO36
+    name: "Debug ADC GPIO36 VP"
+    id: debug_adc36
+    update_interval: 5s
+    attenuation: 11db
+
+  # GPIO39 (SENSOR_VN) — input-only ADC, no pullup available
+  - platform: adc
+    pin: GPIO39
+    name: "Debug ADC GPIO39 VN"
+    id: debug_adc39
+    update_interval: 5s
+    attenuation: 11db
+
+  # GPIO34 — input-only ADC (footprint D5, unpopulated)
+  - platform: adc
+    pin: GPIO34
+    name: "Debug ADC GPIO34"
+    id: debug_adc34
+    update_interval: 5s
+    attenuation: 11db
+
+  # GPIO35 — input-only ADC (footprint D45, unpopulated)
+  - platform: adc
+    pin: GPIO35
+    name: "Debug ADC GPIO35"
+    id: debug_adc35
+    update_interval: 5s
+    attenuation: 11db
+
+#time:
+#  - platform: sntp
+#    id: sntp_time
+#    timezone: "Europe/Rome"
+#    on_time_sync:
+#      then:
+#        - script.execute: rtc_write_time
 
 binary_sensor:
   # SW2 — ON/OFF button (GPIO33, active LOW, internal pull-up)
@@ -93,6 +197,20 @@ binary_sensor:
     filters:
       - delayed_on: 20ms
       - delayed_off: 20ms
+    on_press:
+      then:
+        - lambda: |-
+            // Toggle device_on state
+            id(device_on) = !id(device_on);
+            if (id(device_on)) {
+              id(sw_led_green_d7).turn_on();
+              id(buzzer_on_sequence).execute();
+              ESP_LOGI("onoff", "Device ON");
+            } else {
+              id(sw_led_green_d7).turn_off();
+              id(buzzer_off_sequence).execute();
+              ESP_LOGI("onoff", "Device OFF — nebulization schedules will be skipped");
+            }
 
   # SW3 — START/STOP button (GPIO32, active LOW, internal pull-up)
   - platform: gpio
@@ -108,26 +226,104 @@ binary_sensor:
       - delayed_on: 20ms
       - delayed_off: 20ms
 
+#  - platform: gpio
+#    pin:
+#      number: GPIO2
+#      mode:
+#        input: true
+#        pullup: true
+#    name: "Debug GPIO2 RTC SQW state"
+#    id: debug_gpio2
+#
+
+
+
+  # GPIO4 — unused, safe to probe
+  - platform: gpio
+    pin:
+      number: GPIO4
+      mode:
+        input: true
+        pullup: true
+    name: "Debug GPIO4"
+    id: debug_gpio4
+
+  # GPIO5 — P1 connector external I/O (boot strapping: must be HIGH at boot)
+  - platform: gpio
+    pin:
+      number: GPIO5
+      mode:
+        input: true
+        pullup: true
+    name: "GPIO5 P1 - mancanza acqua"
+    id: debug_gpio5
+    filters:
+      - delayed_on: 50ms
+      - delayed_off: 50ms
+    on_press:
+      then:
+        - lambda: |-
+            id(gpio5_low_count)++;
+            ESP_LOGI("gpio5", "P1 went LOW — count: %d", id(gpio5_low_count));
+    on_release:
+      then:
+        - lambda: |-
+            ESP_LOGI("gpio5", "P1 back HIGH — total lows so far: %d", id(gpio5_low_count));
+
+  # GPIO14 — undocumented, verify
+  - platform: gpio
+    pin:
+      number: GPIO14
+      mode:
+        input: true
+        pullup: true
+    name: "Debug GPIO14"
+    id: debug_gpio14
+
+  # GPIO16 — unused
+  - platform: gpio
+    pin:
+      number: GPIO16
+      mode:
+        input: true
+        pullup: true
+    name: "Debug GPIO16"
+    id: debug_gpio16
+
+  # GPIO17 — unused
+  - platform: gpio
+    pin:
+      number: GPIO17
+      mode:
+        input: true
+        pullup: true
+    name: "Debug GPIO17"
+    id: debug_gpio17
+
 output:
   # D6 — LED Verde (nebulizzazione in corso)
   - platform: gpio
     pin: GPIO18
     id: out_led_green_d6
 
+
   # D3 — LED Blu (WiFi)
   - platform: gpio
     pin: GPIO19
     id: out_led_blue_d3
+
 
   # D7 — LED Rosso (allarme)
   - platform: gpio
     pin: GPIO25
     id: out_led_red_d7
 
+
   # D7 — LED Verde (pronto)
   - platform: gpio
     pin: GPIO23
     id: out_led_green_d7
+
 
   # Buzzer on GPIO26 — frequency adjustable via number entity
   - platform: ledc
@@ -135,22 +331,34 @@ output:
     id: out_buzzer
     frequency: 2500Hz
 
-number:
+  # GPIO13 — virtual ON/OFF driver via Q4 transistor (hypothesis from RE docs)
+  - platform: gpio
+    pin: GPIO13
+    id: sw_onoff
+
+  # GPIO27 — pump relay driver R24->R23->Q7->X20->P-
+  - platform: gpio
+    pin: GPIO27
+    id: sw_pompa_on
+
+
+select:
   - platform: template
     name: "Buzzer Frequency"
     id: buzzer_freq
-    min_value: 100
-    max_value: 8000
-    step: 100
-    initial_value: 2500
-    unit_of_measurement: Hz
-    mode: box
+    options:
+      - "1500"
+      - "2500"
+      - "4000"
+      - "5000"
+    initial_option: "4000"
     optimistic: true
     on_value:
       then:
         - lambda: |-
-            // Update LEDC frequency dynamically
-            id(out_buzzer).update_frequency(x);
+            // Update LEDC frequency from dropdown selection
+            float freq = atof(x.c_str());
+            id(out_buzzer).update_frequency(freq);
 
 switch:
   - platform: template
@@ -166,22 +374,50 @@ switch:
           id: out_buzzer
           level: 0%
 
+  - platform: output
+    name: "SW ON/OFF"
+    id: sw_onoff_switch
+    output: sw_onoff
 
-light:
-  - platform: binary
-    name: "LED Verde Nebulizzazione"
+  - platform: output
+    name: "SW Pompa ON"
+    id: sw_pompa_on_switch
+    output: sw_pompa_on
+    on_turn_on:
+      then:
+        - switch.turn_on: sw_led_green_d6
+        - lambda: |-
+            // Block pump if device is OFF
+            if (!id(device_on)) {
+              ESP_LOGW("pompa", "Device is OFF, blocking pump activation");
+              id(sw_pompa_on_switch).turn_off();
+              return;
+            }
+            ESP_LOGI("pompa", "Pump ON");
+    on_turn_off:
+      then:
+        - switch.turn_off: sw_led_green_d6
+        - lambda: |-
+            ESP_LOGI("pompa", "Pump OFF");
+
+  - platform: output
+    name: "LED Verde Nebulizzazione D6"
+    id: sw_led_green_d6
     output: out_led_green_d6
 
-  - platform: binary
-    name: "LED Blu WiFi"
+  - platform: output
+    name: "LED Blu WiFi D3"
+    id: sw_led_blue_d3
     output: out_led_blue_d3
 
-  - platform: binary
-    name: "LED Rosso Allarme"
+  - platform: output
+    name: "LED Rosso Allarme D7"
+    id: sw_led_red_d7
     output: out_led_red_d7
 
-  - platform: binary
-    name: "LED Verde Pronto"
+  - platform: output
+    name: "LED Verde Pronto D7"
+    id: sw_led_green_d7
     output: out_led_green_d7
 
 
@@ -198,15 +434,64 @@ globals:
     type: uint8_t
     restore_value: no
     initial_value: '0x6F'
+  - id: device_on
+    type: bool
+    restore_value: yes
+    initial_value: 'false'
+  - id: gpio5_low_count
+    type: int
+    restore_value: yes
+    initial_value: '0'
+
 
 
 script:
+  - id: rtc_write_time
+    then:
+      - lambda: |-
+          auto dec2bcd = [](uint8_t v) -> uint8_t {
+            return ((v / 10) << 4) | (v % 10);
+          };
+
+          ESP_LOGI("rtc_write", "rtc_write_time invoked");
+
+          // Get current system time via POSIX
+          time_t now_epoch = ::time(nullptr);
+          if (now_epoch < 1000000000) {
+            ESP_LOGW("rtc_write", "System time not valid (epoch=%lld), skipping RTC write", (long long)now_epoch);
+            return;
+          }
+
+          struct tm *t = localtime(&now_epoch);
+          ESP_LOGI("rtc_write", "Writing to RTC: %04d-%02d-%02d %02d:%02d:%02d",
+            t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
+            t->tm_hour, t->tm_min, t->tm_sec);
+
+          uint8_t buf[8];
+          buf[0] = 0x00;                                    // starting register
+          buf[1] = dec2bcd(t->tm_sec)   | 0x80;            // seconds + ST=1 (oscillator start)
+          buf[2] = dec2bcd(t->tm_min);
+          buf[3] = dec2bcd(t->tm_hour);                    // 24h mode, bit6=0
+          buf[4] = t->tm_wday == 0 ? 7 : t->tm_wday;      // tm_wday: 0=Sun → MCP: 1-7
+          buf[5] = dec2bcd(t->tm_mday);
+          buf[6] = dec2bcd(t->tm_mon + 1);
+          buf[7] = dec2bcd(t->tm_year - 100);              // years since 2000
+
+          i2c::ErrorCode err = id(bus_i2c).write(id(rtc_address), buf, 8, true);
+          if (err == i2c::ERROR_OK) {
+            ESP_LOGI("rtc_write", "RTC write OK");
+          } else {
+            ESP_LOGE("rtc_write", "MCP7940M write failed, error: %d", err);
+          }
+
   - id: rtc_read_time
     then:
       - lambda: |-
           auto bcd2dec = [](uint8_t v) -> uint8_t {
             return ((v >> 4) * 10) + (v & 0x0F);
           };
+
+          ESP_LOGI("rtc_read", "rtc_read_time invoked");
 
           uint8_t reg = 0x00;
           uint8_t data[7] = {0};
@@ -215,12 +500,13 @@ script:
           i2c::ErrorCode err = id(bus_i2c).read(id(rtc_address), data, 7);
 
           if (err != i2c::ERROR_OK) {
-            ESP_LOGE("rtc", "MCP7940M read failed, error: %d", err);
+            ESP_LOGE("rtc_read", "MCP7940M read failed, error: %d", err);
             return;
           }
 
+          // Check ST bit (bit7 of seconds register) — oscillator must be running
           if (!(data[0] & 0x80)) {
-            ESP_LOGW("rtc", "MCP7940M oscillator not running, skipping time restore");
+            ESP_LOGW("rtc_read", "MCP7940M oscillator not running, skipping time restore");
             return;
           }
 
@@ -233,9 +519,13 @@ script:
           t.tm_year  = bcd2dec(data[6]) + 100;        // years since 1900
           t.tm_isdst = -1;
 
+          ESP_LOGI("rtc_read", "RTC raw read: %04d-%02d-%02d %02d:%02d:%02d",
+            t.tm_year + 1900, t.tm_mon + 1, t.tm_mday,
+            t.tm_hour, t.tm_min, t.tm_sec);
+
           time_t epoch = mktime(&t);
           if (epoch == -1) {
-            ESP_LOGW("rtc", "mktime failed, invalid RTC data");
+            ESP_LOGW("rtc_read", "mktime failed, invalid RTC data");
             return;
           }
 
@@ -243,6 +533,177 @@ script:
           struct timeval tv = { .tv_sec = epoch, .tv_usec = 0 };
           settimeofday(&tv, nullptr);
 
-          ESP_LOGI("rtc", "RTC→system: %04d-%02d-%02d %02d:%02d:%02d",
-            t.tm_year + 1900, t.tm_mon + 1, t.tm_mday,
-            t.tm_hour, t.tm_min, t.tm_sec);
+          ESP_LOGI("rtc_read", "RTC→system time set: epoch=%lld", (long long)epoch);
+
+  - id: rtc_debug_poll
+    then:
+      - script.execute: rtc_read_time
+      - lambda: |-
+          // Log system time after RTC read for comparison
+          time_t sys_epoch = ::time(nullptr);
+          struct tm *s = localtime(&sys_epoch);
+          ESP_LOGI("rtc_poll", "System : %04d-%02d-%02d %02d:%02d:%02d",
+            s->tm_year + 1900, s->tm_mon + 1, s->tm_mday,
+            s->tm_hour, s->tm_min, s->tm_sec);
+
+  - id: buzzer_on_sequence
+    then:
+      # Three short rising-pitch beeps — power on confirmation
+      - output.ledc.set_frequency:
+          id: out_buzzer
+          frequency: 2200Hz
+      - output.set_level:
+          id: out_buzzer
+          level: 50%
+      - delay: 120ms
+      - output.set_level:
+          id: out_buzzer
+          level: 0%
+      - delay: 40ms
+
+      - output.ledc.set_frequency:
+          id: out_buzzer
+          frequency: 2400Hz
+      - output.set_level:
+          id: out_buzzer
+          level: 50%
+      - delay: 180ms
+      - output.set_level:
+          id: out_buzzer
+          level: 0%
+      - delay: 60ms
+
+      - output.ledc.set_frequency:
+          id: out_buzzer
+          frequency: 2600Hz
+      - output.set_level:
+          id: out_buzzer
+          level: 50%
+      - delay: 160ms
+      - output.set_level:
+          id: out_buzzer
+          level: 0%
+
+  - id: buzzer_off_sequence
+    then:
+      - output.ledc.set_frequency:
+          id: out_buzzer
+          frequency: 2500Hz
+      - output.set_level:
+          id: out_buzzer
+          level: 50%
+      - delay: 2770ms
+      - output.set_level:
+          id: out_buzzer
+          level: 0%
+
+  - id: buzzer_stop_sequence
+    then:
+      - output.ledc.set_frequency:
+          id: out_buzzer
+          frequency: 2200Hz
+      - output.set_level:
+          id: out_buzzer
+          level: 50%
+      - delay: 500ms
+      - output.set_level:
+          id: out_buzzer
+          level: 0%
+
+  - id: buzzer_start_sequence
+    then:
+      # Initial long beep
+      - output.set_level:
+          id: out_buzzer
+          level: 50%
+      - output.ledc.set_frequency:
+          id: out_buzzer
+          frequency: 2600Hz
+      - delay: 1030ms
+      - output.set_level:
+          id: out_buzzer
+          level: 0%
+      - delay: 940ms
+
+      # Progressively shorter beeps
+      - output.set_level: { id: out_buzzer, level: 50% }
+      - delay: 810ms
+      - output.set_level: { id: out_buzzer, level: 0% }
+      - delay: 790ms
+
+      - output.set_level: { id: out_buzzer, level: 50% }
+      - delay: 660ms
+      - output.set_level: { id: out_buzzer, level: 0% }
+      - delay: 640ms
+
+      - output.set_level: { id: out_buzzer, level: 50% }
+      - delay: 500ms
+      - output.set_level: { id: out_buzzer, level: 0% }
+      - delay: 460ms
+
+      - output.set_level: { id: out_buzzer, level: 50% }
+      - delay: 330ms
+      - output.set_level: { id: out_buzzer, level: 0% }
+      - delay: 280ms
+
+      - output.set_level: { id: out_buzzer, level: 50% }
+      - delay: 310ms
+      - output.set_level: { id: out_buzzer, level: 0% }
+      - delay: 230ms
+
+      - output.set_level: { id: out_buzzer, level: 50% }
+      - delay: 280ms
+      - output.set_level: { id: out_buzzer, level: 0% }
+      - delay: 200ms
+
+      - output.set_level: { id: out_buzzer, level: 50% }
+      - delay: 210ms
+      - output.set_level: { id: out_buzzer, level: 0% }
+      - delay: 190ms
+
+      - output.set_level: { id: out_buzzer, level: 50% }
+      - delay: 160ms
+      - output.set_level: { id: out_buzzer, level: 0% }
+      - delay: 140ms
+
+      - output.set_level: { id: out_buzzer, level: 50% }
+      - delay: 140ms
+      - output.set_level: { id: out_buzzer, level: 0% }
+      - delay: 90ms
+
+      - output.set_level: { id: out_buzzer, level: 50% }
+      - delay: 110ms
+      - output.set_level: { id: out_buzzer, level: 0% }
+      - delay: 60ms
+
+      - output.set_level: { id: out_buzzer, level: 50% }
+      - delay: 80ms
+      - output.set_level: { id: out_buzzer, level: 0% }
+      - delay: 30ms
+
+      # Two final long beeps
+      - output.set_level: { id: out_buzzer, level: 50% }
+      - delay: 450ms
+      - output.set_level: { id: out_buzzer, level: 0% }
+      - delay: 10ms
+
+      - output.set_level: { id: out_buzzer, level: 50% }
+      - delay: 1130ms
+      - output.set_level: { id: out_buzzer, level: 0% }
+
+interval:
+  - interval: 60s
+    then:
+      - script.execute: rtc_debug_poll
+
+# --- periodic RTC debug read (every minute) --------------------------------
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: Europe/Rome
+    #servers:
+    #  - 0.it.pool.ntp.org
+    #  - 1.it.pool.ntp.org
+    on_time_sync:
+      then:
+        - script.execute: rtc_write_time
