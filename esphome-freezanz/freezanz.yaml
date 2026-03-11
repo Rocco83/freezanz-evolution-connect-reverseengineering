@@ -2,11 +2,16 @@ esphome:
   # Hostname for the device; mac_suffix differentiates multiple units
   name: espfreezanz
   friendly_name: Freezanz
+  on_boot:
+    priority: 600
+    then:
+      - script.execute: rtc_read_time
 
 esp32:
-  board: esp32-c6-devkitm-1
+  board: esp32dev
   framework:
     type: esp-idf
+    #type: arduino
 
 # Enable logging via UART
 logger:
@@ -70,4 +75,174 @@ time:
   - platform: sntp
     id: sntp_time
     timezone: "Europe/Rome"
+    on_time_sync:
+      then:
+        - script.execute: rtc_write_time
 
+binary_sensor:
+  # SW2 — ON/OFF button (GPIO33, active LOW, internal pull-up)
+  - platform: gpio
+    pin:
+      number: GPIO33
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    name: "Button ON/OFF"
+    id: btn_onoff
+    filters:
+      - delayed_on: 20ms
+      - delayed_off: 20ms
+
+  # SW3 — START/STOP button (GPIO32, active LOW, internal pull-up)
+  - platform: gpio
+    pin:
+      number: GPIO32
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    name: "Button Start/Stop"
+    id: btn_startstop
+    filters:
+      - delayed_on: 20ms
+      - delayed_off: 20ms
+
+output:
+  # D6 — LED Verde (nebulizzazione in corso)
+  - platform: gpio
+    pin: GPIO18
+    id: out_led_green_d6
+
+  # D3 — LED Blu (WiFi)
+  - platform: gpio
+    pin: GPIO19
+    id: out_led_blue_d3
+
+  # D7 — LED Rosso (allarme)
+  - platform: gpio
+    pin: GPIO25
+    id: out_led_red_d7
+
+  # D7 — LED Verde (pronto)
+  - platform: gpio
+    pin: GPIO23
+    id: out_led_green_d7
+
+  # Buzzer on GPIO26 — frequency adjustable via number entity
+  - platform: ledc
+    pin: GPIO26
+    id: out_buzzer
+    frequency: 2500Hz
+
+number:
+  - platform: template
+    name: "Buzzer Frequency"
+    id: buzzer_freq
+    min_value: 100
+    max_value: 8000
+    step: 100
+    initial_value: 2500
+    unit_of_measurement: Hz
+    mode: box
+    optimistic: true
+    on_value:
+      then:
+        - lambda: |-
+            // Update LEDC frequency dynamically
+            id(out_buzzer).update_frequency(x);
+
+switch:
+  - platform: template
+    name: "Buzzer Enable"
+    id: buzzer_enable
+    optimistic: true
+    on_turn_on:
+      - output.set_level:
+          id: out_buzzer
+          level: 50%   # 50% duty cycle = max volume for piezo
+    on_turn_off:
+      - output.set_level:
+          id: out_buzzer
+          level: 0%
+
+
+light:
+  - platform: binary
+    name: "LED Verde Nebulizzazione"
+    output: out_led_green_d6
+
+  - platform: binary
+    name: "LED Blu WiFi"
+    output: out_led_blue_d3
+
+  - platform: binary
+    name: "LED Rosso Allarme"
+    output: out_led_red_d7
+
+  - platform: binary
+    name: "LED Verde Pronto"
+    output: out_led_green_d7
+
+
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+  scan: true
+  frequency: 100kHz
+  id: bus_i2c
+
+# --- RTC helpers -----------------------------------------------------------
+globals:
+  - id: rtc_address
+    type: uint8_t
+    restore_value: no
+    initial_value: '0x6F'
+
+
+script:
+  - id: rtc_read_time
+    then:
+      - lambda: |-
+          auto bcd2dec = [](uint8_t v) -> uint8_t {
+            return ((v >> 4) * 10) + (v & 0x0F);
+          };
+
+          uint8_t reg = 0x00;
+          uint8_t data[7] = {0};
+
+          id(bus_i2c).write(id(rtc_address), &reg, 1, false);
+          i2c::ErrorCode err = id(bus_i2c).read(id(rtc_address), data, 7);
+
+          if (err != i2c::ERROR_OK) {
+            ESP_LOGE("rtc", "MCP7940M read failed, error: %d", err);
+            return;
+          }
+
+          if (!(data[0] & 0x80)) {
+            ESP_LOGW("rtc", "MCP7940M oscillator not running, skipping time restore");
+            return;
+          }
+
+          struct tm t = {};
+          t.tm_sec   = bcd2dec(data[0] & 0x7F);
+          t.tm_min   = bcd2dec(data[1] & 0x7F);
+          t.tm_hour  = bcd2dec(data[2] & 0x3F);
+          t.tm_mday  = bcd2dec(data[4] & 0x3F);
+          t.tm_mon   = bcd2dec(data[5] & 0x1F) - 1;  // tm_mon is 0-based
+          t.tm_year  = bcd2dec(data[6]) + 100;        // years since 1900
+          t.tm_isdst = -1;
+
+          time_t epoch = mktime(&t);
+          if (epoch == -1) {
+            ESP_LOGW("rtc", "mktime failed, invalid RTC data");
+            return;
+          }
+
+          // Set system clock via POSIX
+          struct timeval tv = { .tv_sec = epoch, .tv_usec = 0 };
+          settimeofday(&tv, nullptr);
+
+          ESP_LOGI("rtc", "RTC→system: %04d-%02d-%02d %02d:%02d:%02d",
+            t.tm_year + 1900, t.tm_mon + 1, t.tm_mday,
+            t.tm_hour, t.tm_min, t.tm_sec);
