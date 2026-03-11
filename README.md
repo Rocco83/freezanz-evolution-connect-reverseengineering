@@ -61,45 +61,16 @@ The routing of **GPIO21 / GPIO22** (I²C) go to the **IC29 is an I²C real‑ti
 | ------- | ---------- | ------------------------------ | ----------------------------------------------------------------- |
 | **Y2**  | “32 C 040” | 32.768 kHz tuning‑fork crystal | Pins X1/X2 of IC29 (through short tracks) — provides RTC timebase |
 
-### Identification steps taken
-
+This has been confirmed
 ```
->>> from machine import Pin, I2C
->>> import time
->>>
->>> i2c = I2C(0,            # use GPIO21/22 on the ESP32 board
-...           scl=Pin(22),
-...               sda=Pin(21),
-...           freq=100_000)
->>>
->>> print("IC addresses:", [hex(a) for a in i2c.scan()])
-IC addresses: ['0x6f']
->>> def bcd2dec(x): return (x >> 4) * 10 + (x & 0x0F)
-...
->>> for _ in range(8):
-...     sec = i2c.readfrom_mem(0x6F, 0x00, 1)[0] & 0x7F   # seconds reg., mask ST bit
-...     print("second =", bcd2dec(sec))
-...     time.sleep(1)
-...
-second = 38
-second = 39
-second = 40
-second = 41
-second = 42
-second = 43
-second = 44
-second = 45
->>>
+[23:30:15.223][C][i2c.idf:093]: I2C Bus:
+[23:30:15.230][C][i2c.idf:094]:   SDA Pin: GPIO21
+[23:30:15.230][C][i2c.idf:094]:   SCL Pin: GPIO22
+[23:30:15.230][C][i2c.idf:094]:   Frequency: 100000 Hz
+[23:30:15.230][C][i2c.idf:104]:   Recovery: bus successfully recovered
+[23:30:15.232][C][i2c.idf:114]: Results from bus scan:
+[23:30:15.233][C][i2c.idf:120]: Found device at address 0x6F
 ```
-
-
-### Hypotheses still to confirm
-
-1. 8‑bit GPIO expander (PCA9554A) — less likely because VBAT present.
-2. Low‑power ADC — also possible but VBAT pin matches RTC.
-3. Power monitor.
-
-> **Next steps**: scan I²C (expect address 0x6F), read time registers, remove Y2 to see clock stop.
 
 ---
 
@@ -231,6 +202,112 @@ second = 45
 | GPIO | Funzione     | Segnale           |
 | ---- | ------------ | ----------------- |
 | 26   | Piezo buzzer | PWM 2‑4 kHz (TBD) |
+
+## Buzzer circuit — detail
+
+### Components
+
+| Ref | Value | Function |
+|-----|-------|----------|
+| Q6 | BST82 (marking "68W 02") | N-Channel Enhancement Mode Vertical DMOS FET, SOT-23 |
+| R14 | 4K7 | Series resistor on GPIO side — limits gate current |
+| R13 | 2K2 | Pull-down resistor to GND — voltage divider, stabilizes gate |
+
+### Wiring
+
+- **Piezo (+)**: connected directly to **P+ rail (12V)** with no components in between
+- **Piezo (-)**: connected to **Q6 Drain**
+- **Q6 Source**: GND
+- **Q6 Gate**: GPIO26 → R14 (4K7) → R13 (2K2) → GND
+
+### Gate voltage
+
+With GPIO26 HIGH (3.3V), the R14/R13 divider brings the gate to:
+
+```
+Vgate = 3.3V × (2200 / (4700 + 2200)) ≈ 1.05V
+```
+
+Sufficient to exceed the BST82 Vgs threshold (~0.8–1.5V typical for DMOS FET).
+
+### Volume modulation — analysis and hypotheses
+
+FFT measurements on audio recordings at 3 distinct volume levels show that
+the RMS amplitude varies by approximately **10×** between minimum and maximum volume,
+confirming that the original firmware does effectively modulate volume.
+
+| Level | Measured RMS | Dominant frequency |
+|-------|--------------|--------------------|
+| vol1 (low)    | ~0.004 | 5200 Hz (2× harmonic of 2600 Hz) |
+| vol2 (medium) | ~0.025 | 5200 Hz (2× harmonic of 2600 Hz) |
+| vol3 (high)   | ~0.055 | 5200 Hz (2× harmonic of 2600 Hz) |
+
+Since the +12V is directly connected to the piezo with no control components,
+modulation can only occur **on the Q6 gate**.
+
+Technical hypotheses for volume modulation, in order of likelihood:
+
+1. **Hardware DAC (GPIO26 = DAC2)** — the original firmware uses the DAC instead
+   of PWM to generate a variable DC voltage on the gate, driving the BST82 into
+   its linear region and modulating the Drain-Source resistance. To verify:
+   measure Q6 gate with oscilloscope at different volume levels with original
+   firmware — if the DC level changes, this hypothesis is confirmed.
+
+2. **Variable PWM duty cycle** — the firmware varies the PWM duty cycle,
+   modifying the average conduction time of the BST82. Less likely because
+   with a fast-switching MOSFET the effect on perceived volume is limited.
+
+3. **Frequency near/far from piezo resonance** — the piezo responds non-linearly
+   to frequency; it sounds louder near its mechanical resonance frequency.
+   Partially supported by the variation in dominant frequency measured across levels.
+
+### TODO — oscilloscope verification
+
+- [ ] Measure waveform on Q6 gate with original firmware at min and max volume
+- [ ] Check whether DC level on gate changes with volume (confirms DAC hypothesis)
+- [ ] Check whether PWM duty cycle changes with volume (confirms variable PWM hypothesis)
+- [ ] Measure mechanical resonance frequency of the piezo (volume peak)
+
+## P1 connector — liquid flow sensor
+
+### Description
+
+P1 is a **liquid flow sensor** connected via JST-XH 3-pin connector.
+The sensor outputs a signal proportional to liquid flow on the return pin.
+
+### Wiring
+
+| P1 Pin | Signal | Description |
+|--------|--------|-------------|
+| 1 | GPIO5 | Signal return pin |
+| 2 | GND | Ground reference |
+| 3 | P+ (12V via H6) | Sensor power supply |
+
+### Signal behavior
+
+- **Normal state (water flowing)**: return pin at ~9V (HIGH after voltage divider)
+- **Fault state (no water)**: return pin pulled to GND (LOW)
+- During normal pump activation, multiple state transitions are expected on this pin.
+
+### Voltage protection
+
+The sensor return pin operates at ~9V. Direct connection to GPIO5 (max 3.3V)
+would destroy the ESP32. A voltage divider or level shifter **must be present**
+between P1 pin 1 and GPIO5 on the PCB — verify resistor values on PCB traces
+between P1 connector and GPIO5.
+
+### Pull-down
+
+Since the signal is externally driven (HIGH = ~3.3V after divider, LOW = GND),
+the ESP32 internal pull-up must be disabled. An external pull-down resistor
+is recommended to guarantee a defined LOW state when the sensor is disconnected.
+If a resistor to GND is already present on the PCB on this line, it may be sufficient.
+
+### TODO
+
+- [ ] Identify and measure voltage divider components between P1 pin 1 and GPIO5
+- [ ] Determine exact timing pattern of state transitions during normal pump activation
+- [ ] Define threshold (duration of LOW) to classify as water fault vs normal transition
 
 ---
 
