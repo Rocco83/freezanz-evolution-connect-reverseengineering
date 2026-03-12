@@ -1,6 +1,6 @@
 # Freezanz **Zhalt Evolution Connect** — Reverse‑Engineering README
 
-# Attenzione: questo README è stato creato con ChatGPT e contiene degli errori, sopratutto tutti i voltaggi sono da verificare. Non è sicuro affidarsi a questo progetto, sopratutto per la parte elettrica.
+# Attenzione: questo README è stato creato con IA varie e contiene degli errori, sopratutto tutti i voltaggi sono da verificare. Non è sicuro affidarsi a questo progetto, sopratutto per la parte elettrica.
 
 ## Avvertenza legale
 
@@ -18,7 +18,9 @@ Raccogliere e mantenere una descrizione completa di **pin‑out**, **connettori*
 
 | Versione | Data (EU/Rome) | Autore               | Note brevi                                                                   |
 | -------- | -------------- | -------------------- | ---------------------------------------------------------------------------- |
-| 0.5      | 2025‑05‑13     | ChatGPT + <tuo nome> | Sostituita tabella pin‑out ESP32 con layout basato su LastMinuteEngineer + mapping Freezanz |
+| 0.5      | 2025‑05‑13     | ChatGPT + Rocco83    | Sostituita tabella pin‑out ESP32 con layout basato su LastMinuteEngineer + mapping Freezanz |
+| 0.6      | 2026‑03‑12     | Rocco83 + Claude     | Mappatura completa J3 (I2C expansion), J8 (LED ext), P2 (sensor input), correzione P1 |
+
 
 ---
 
@@ -38,9 +40,11 @@ Raccogliere e mantenere una descrizione completa di **pin‑out**, **connettori*
 | **J1 (DC_IN)**  | Jack barrel (diameter TBD) | Tip = **V+**, Sleeve = GND | TBD (12 V ?)    | Ingresso alimentazione continua; negativo a massa, positivo protetto da **D1** e instradato al bus **P+** e **B+**, oltre a P1 via **H6** |
 | **PUMP**        | Fast-on 2 p            | **PUMP P (P+) / PUMP N (P-)**   | 12 VCC | Rele` pompa nebulizzatore usa la stessa VCC del jack J1, GND mediato da IO27 (da confermare) |
 | **BATT**        | Fast-on 2 p            | **BATT P (B+)  / BATT N (B-)**  | 12 VCC | Backup battery (condensatore 16V 68000 uF); **B+** è solidale alla rail **P+** |
-| **P1**          | JST-XH 3 p             | 1 = **VCC via H6**, 2 = GND, 3 = GPIO5 | TBD           | I/O esterno; **P+** su pin 1 tramite jumper **H6** |
-| **J3**          | Pin header 10 × 1 (NP) | 8 = **IO15** (via R89 470 Ω) | TBD             | Porta espansione - non collegata|
-| **J8 (LED_EXT)**| JST-XH 3 p             | TBD                          | TBD             | Connettore LED esterni - non collegato |
+| **P1**          | JST-XH 3 p             | 1 = **P+ (12V via H6)**, 2 = GND, 3 = sensor input → R71 (38KΩ) → R107 (0Ω) → GPIO5 | 12V / 0-3.3V | Sensore dry contact: aperto = HIGH su GPIO5, chiuso a GND = LOW. 38KΩ protegge GPIO5 da tensioni >3.3V |
+| **J3**          | Pin header 2×4 (NP)    | vedi sezione dedicata        | 3.3V / I2C      | Porta espansione I2C + GPIO. Non collegata di serie. |
+| **J8 (LED_EXT)**| JST-XH 5 p (NP)        | vedi sezione dedicata        | 12V             | Connettore LED esterni. Non collegato di serie. |
+| **P2**          | JST-XH 3 p (NP)        | 1 = 12V, 2 = GND, 3 = sensor input → R67 (38KΩ) → R106 (0Ω) → GPIO15 | 12V / 0-3.3V | Secondo ingresso sensore dry contact, stesso schema di P1. Non collegato di serie. |
+
 
 ### Silkscreen power rail labels (bottom edge)
 | Label serigrafia | Rail / Signal                                                                       |
@@ -49,6 +53,89 @@ Raccogliere e mantenere una descrizione completa di **pin‑out**, **connettori*
 | **P-**           | “PUMP N” – Return/ground for pump                                                   |
 | **B+**           | “BATT P” – Battery positive (internally tied to **P+**)                             |
 | **B-**           | “BATT N” – Battery negative                                                         |
+
+
+
+## Connettore **J3** — Header espansione I2C + GPIO
+
+J3 è un pin header 2×4 (8 pin totali) non popolato di serie. Espone il bus I2C
+dell'ESP32 con pull-up dedicati, alimentazione e due GPIO aggiuntivi.
+Progettato per collegare moduli I2C esterni (display, sensori) o periferiche digitali.
+
+| Pin J3 | Segnale         | Percorso                                      | Note |
+|--------|-----------------|-----------------------------------------------|------|
+| 1      | VCC / BATT+     | Diretta dalla rail P+                         | Alimentazione 12V |
+| 2      | VCC filtrato    | Via resistenza 0.2Ω (jumper/sense)            | VCC con lieve filtraggio |
+| 3      | VCC pull-up I2C | → R452 (3K3) → GPIO22 (SCL) / → R455 (3K3) → GPIO21 (SDA) | Pull-up esterno per bus I2C. Alimentare questo pin per attivare i pull-up su SCL e SDA |
+| 4      | GND             | —                                             | Riferimento comune |
+| 5      | SDA (GPIO21)    | Via R65 (120Ω)                                | I2C Data |
+| 6      | GPIO5           | Via R36 (470Ω)                                | Condiviso con P1 pin 3 (sensore acqua) |
+| 7      | SCL (GPIO22)    | Via R66 (120Ω)                                | I2C Clock |
+| 8      | GPIO15          | Via R89 (470Ω) → R106 (0Ω)                   | GPIO generico. Boot-strapping: deve essere HIGH al reset |
+
+### Note I2C su J3
+
+- I pull-up interni alla board su SCL/SDA sono già presenti (R452, R455 da 3K3
+  collegate a VCC tramite pin 3).
+- Per usare il bus I2C su J3: collegare VCC a pin 1 o 2, GND a pin 4,
+  SDA a pin 5, SCL a pin 7. Alimentare pin 3 per attivare i pull-up.
+- GPIO5 (pin 6) è condiviso con il sensore acqua su P1: non usare
+  contemporaneamente P1 e J3 pin 6 per segnali distinti.
+- GPIO15 (pin 8) è un boot-strapping pin: deve essere HIGH al boot.
+  La resistenza R89 da 470Ω protegge il GPIO ma non sostituisce un pull-up
+  esterno se il dispositivo collegato potrebbe portare la linea a GND durante il boot.
+
+---
+
+## Connettore **J8** — LED esterni
+
+J8 è un pin header da 5 pin non popolato di serie. Espone i segnali dei tre
+LED di stato della board (D7 bicolore e D3) verso l'esterno, permettendo
+di collegare LED remoti su pannello frontale o indicatori visivi in posizione
+accessibile. Le resistenze di limitazione corrente sono già presenti sulla board.
+
+| Pin J8 | Segnale           | Percorso            | Note |
+|--------|-------------------|---------------------|------|
+| 1      | 12V (anodo comune)| Rail P+             | Alimentazione LED |
+| 2      | Catodo D7 Rosso   | Via ~500Ω           | LED rosso = allarme |
+| 3      | Catodo D7 Verde   | Via ~500Ω           | LED verde = pronto |
+| 4      | Catodo D3         | Via ~400Ω           | LED stato (blu sulla board) |
+| 5      | GND               | —                   | Riferimento |
+
+### Note J8
+
+- Le resistenze di dropping sono già sulla board: collegare LED esterni
+  direttamente senza aggiungere resistenze aggiuntive.
+- Corrente LED stimata con 12V: (12 - Vf) / R ≈ 20-25mA per LED standard.
+- I LED interni D7 e D3 rimangono attivi in parallelo con quelli esterni.
+
+---
+
+## Connettore **P2** — Secondo ingresso sensore
+
+P2 è un connettore JST-XH 3 pin non collegato di serie. Ha lo stesso schema
+elettrico di P1: permette di collegare un sensore dry contact a 12V il cui
+stato viene letto da GPIO15 dell'ESP32.
+
+| Pin P2 | Segnale    | Percorso                              | Note |
+|--------|------------|---------------------------------------|------|
+| 1      | 12V        | Rail P+                               | Alimentazione/riferimento sensore |
+| 2      | GND        | —                                     | Riferimento comune |
+| 3      | Sensor in  | → R67 (38KΩ) → R106 (0Ω) → GPIO15    | Input dry contact |
+
+### Schema di funzionamento P2
+
+Identico a P1: il sensore è un contatto pulito (dry contact) che va a GND
+quando attivo. La resistenza R67 da 38KΩ protegge GPIO15 da tensioni superiori
+a 3.3V. R103 è un footprint alternativo non popolato.
+
+- **Contatto aperto** (sensore non attivo): GPIO15 = HIGH
+- **Contatto chiuso a GND** (sensore attivo): GPIO15 = LOW
+
+GPIO15 è un boot-strapping pin (deve essere HIGH al boot): verificare che
+il sensore collegato non porti la linea a GND durante l'accensione.
+
+---
 
 ## IC29 — identification
 
@@ -402,9 +489,12 @@ Quando entrambi i test passano, l’emulazione del pulsante e il segnale RTC son
 
 ## TODO
 
-* [ ] Investigate **IO15 / J3‑8** expansion line: measure the default voltage, test with external pull‑down/up through R89, and determine intended peripheral use.
+* [x] Investigate **IO15 / J3‑8** expansion line: mappato completo, GPIO15 via R89 470Ω → R106 0Ω. Condiviso con P2 pin 3.
+* [x] Mappatura completa J3: I2C expansion header con pull-up 3K3, GPIO5, GPIO15.
+* [x] Mappatura J8: LED esterni 12V, catodi D7 rosso/verde e D3 esposti con resistenze già in serie.
+* [x] Mappatura P2: secondo sensore dry contact su GPIO15, stesso schema P1/GPIO5.
+* [x] Correzione P1: pin 1 = 12V (P+ via H6), pin 3 = sensore → R71 38KΩ → R107 0Ω → GPIO5.
+* [x] Phase‑2 test: board re‑installed in unit.
 * [ ] SENSOR\_VP/VN: log ADC values in real operation.
-* [ ] Phase‑2 test: board re‑installed in unit.
 * [ ] Draw partial schematic in KiCad.
-* [ ] Document P1 signal P+ after trace.
 
