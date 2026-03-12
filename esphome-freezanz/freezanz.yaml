@@ -87,27 +87,27 @@ button:
     id: sw_onoff_switch
     output: sw_onoff
     duration: 200ms
-    entity_category: "diagnostic"
+    entity_category: ""
 
   - platform: template
-    name: "SW Pompa ON⁄OFF"
-    id: sw_pompa_on_switch
+    name: "SW Pump ON⁄OFF"
+    id: sw_pump_on_switch
     entity_category: ""
     on_press:
       then:
         - lambda: |-
             if (!id(device_on)) {
-              ESP_LOGW("pompa", "Device is OFF, blocking pump activation");
+              ESP_LOGW("pump", "Device is OFF, blocking pump activation");
               return;
             }
-            if (id(pompa_running)) {
-              ESP_LOGI("pompa", "Pump running — stopping");
-              id(pompa_start).stop();
-              id(pompa_stop).stop();
-              id(pompa_force_stop).execute();
+            if (id(action_running)) {
+              ESP_LOGI("pump", "Pump running — stopping");
+              id(pump_start).stop();
+              id(pump_stop).stop();
+              id(pump_force_stop).execute();
               return;
             }
-            id(pompa_start).execute();
+            id(pump_start).execute();
 
   - platform: template
     name: "Buzzer ON sequence"
@@ -157,23 +157,11 @@ sensor:
 
   - platform: template
     name: "GPIO5 P1 Low Count"
-    id: gpio5_low_count_sensor
-    lambda: return id(gpio5_low_count);
+    id: water_flow_missing_counter_sensor
+    lambda: return id(water_flow_missing_counter);
     update_interval: 10s
     accuracy_decimals: 0
     unit_of_measurement: "events"
-    entity_category: "diagnostic"
-
-  - platform: pulse_counter
-    pin:
-      number: GPIO2
-      mode:
-        input: true
-        pullup: true
-    name: "Debug GPIO2 RTC SQW pulse"
-    id: debug_gpio2_pulse
-    update_interval: 5s
-    # At 1Hz square wave, expect ~5 pulses every 5s
     entity_category: "diagnostic"
 
   # GPIO36 (SENSOR_VP) — input-only ADC, no pullup available
@@ -212,13 +200,13 @@ sensor:
     attenuation: 11db
     entity_category: "diagnostic"
 
-#time:
-#  - platform: sntp
-#    id: sntp_time
-#    timezone: "Europe/Rome"
-#    on_time_sync:
-#      then:
-#        - script.execute: rtc_write_time
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: "Europe/Rome"
+    on_time_sync:
+      then:
+        - script.execute: rtc_write_time
 
 binary_sensor:
   # SW2 — ON/OFF button (GPIO33, active LOW, internal pull-up)
@@ -267,29 +255,26 @@ binary_sensor:
       then:
         - lambda: |-
             if (!id(device_on)) {
-              ESP_LOGW("pompa", "Device is OFF, blocking pump activation");
+              ESP_LOGW("pump", "Device is OFF, blocking pump activation");
               return;
             }
-            if (id(pompa_running)) {
-              ESP_LOGI("pompa", "Pump running — stopping");
-              id(pompa_start).stop();
-              id(pompa_stop).stop();
-              id(pompa_force_stop).execute();
+            if (id(action_running)) {
+              ESP_LOGI("pump", "Pump running — stopping");
+              id(pump_start).stop();
+              id(pump_stop).stop();
+              id(pump_force_stop).execute();
               return;
             }
-            id(pompa_start).execute();
+            id(pump_start).execute();
 
-#  - platform: gpio
-#    pin:
-#      number: GPIO2
-#      mode:
-#        input: true
-#        pullup: true
-#    name: "Debug GPIO2 RTC SQW state"
-#    id: debug_gpio2
-#
-
-
+  - platform: gpio
+    pin:
+      number: GPIO2
+      mode:
+        input: true
+        pullup: true
+    name: "Debug GPIO2 RTC SQW state"
+    id: debug_gpio2
 
   # GPIO4 — unused, safe to probe
   - platform: gpio
@@ -308,22 +293,23 @@ binary_sensor:
       number: GPIO5
       mode:
         input: true
-        pullup: true
-      inverted: true
-    name: "GPIO5 P1 - mancanza acqua"
-    id: debug_gpio5
+        pullup: false   # no pullup — signal is externally driven
+        pulldown: false # pulldown should be external on PCB
+      inverted: true # HIGH = water OK, LOW = no water
+    name: "Water Flow Missing"
+    id: sensor_water_flow
     filters:
-      - delayed_on: 50ms
-      - delayed_off: 50ms
+      - delayed_on: 200ms
+      - delayed_off: 200ms
     on_press:
       then:
         - lambda: |-
-            id(gpio5_low_count)++;
-            ESP_LOGI("gpio5", "P1 went LOW — count: %d", id(gpio5_low_count));
+            id(water_flow_missing_counter)++;
+            ESP_LOGI("water", "Flow sensor LOW (no water) — count: %d", id(water_flow_missing_counter));
     on_release:
       then:
         - lambda: |-
-            ESP_LOGI("gpio5", "P1 back HIGH — total lows so far: %d", id(gpio5_low_count));
+            ESP_LOGI("water", "Flow sensor HIGH (water OK) — total events: %d", id(water_flow_missing_counter));
 
   # GPIO14 — undocumented, verify
   - platform: gpio
@@ -359,25 +345,25 @@ binary_sensor:
     entity_category: "diagnostic"
 
 output:
-  # D6 — LED Verde (nebulizzazione in corso)
+  # D6 — Green LED (activity in progress - e.g. nebulization)
   - platform: gpio
     pin: GPIO18
     id: out_led_green_d6
 
 
-  # D3 — LED Blu (WiFi)
+  # D3 — Blue LED (WiFi)
   - platform: gpio
     pin: GPIO19
     id: out_led_blue_d3
 
 
-  # D7 — LED Rosso (allarme)
+  # D7 — Red LED (alarm)
   - platform: gpio
     pin: GPIO25
     id: out_led_red_d7
 
 
-  # D7 — LED Verde (pronto)
+  # D7 — Green LED (readiness)
   - platform: gpio
     pin: GPIO23
     id: out_led_green_d7
@@ -397,13 +383,14 @@ output:
   # GPIO27 — pump relay driver R24->R23->Q7->X20->P-
   - platform: gpio
     pin: GPIO27
-    id: sw_pompa_on
+    id: sw_pump_on
 
 
 select:
   - platform: template
     name: "Buzzer Frequency"
     id: buzzer_freq
+    entity_category: "diagnostic"
     options:
       - "1500"
       - "2500"
@@ -420,11 +407,12 @@ select:
   - platform: template
     name: "Buzzer Volume"
     id: buzzer_volume_select
+    entity_category: "diagnostic"
     options:
-      - "basso"
-      - "medio"
-      - "alto"
-    initial_option: "medio"
+      - "low"
+      - "medium"
+      - "high"
+    initial_option: "medium"
     optimistic: true
     on_value:
       then:
@@ -451,6 +439,7 @@ switch:
   - platform: template
     name: "Buzzer Test"
     id: buzzer_test
+    entity_category: "diagnostic"
     optimistic: true
     on_turn_on:
       - output.set_level:
@@ -462,22 +451,22 @@ switch:
           level: 0%
 
   - platform: output
-    name: "LED Verde Nebulizzazione D6"
+    name: "Green LED - Nebulization in progress"
     id: sw_led_green_d6
     output: out_led_green_d6
 
   - platform: output
-    name: "LED Blu WiFi D3"
+    name: "Blue LED - WiFi Connected"
     id: sw_led_blue_d3
     output: out_led_blue_d3
 
   - platform: output
-    name: "LED Rosso Allarme D7"
+    name: "Red LED - Lack water"
     id: sw_led_red_d7
     output: out_led_red_d7
 
   - platform: output
-    name: "LED Verde Pronto D7"
+    name: "Green LED - Readiness"
     id: sw_led_green_d7
     output: out_led_green_d7
 
@@ -499,11 +488,11 @@ globals:
     type: bool
     restore_value: yes
     initial_value: 'false'
-  - id: pompa_running
+  - id: action_running
     type: bool
     restore_value: no
     initial_value: 'false'
-  - id: pompa_duration
+  - id: pump_duration
     type: int
     restore_value: yes
     initial_value: '10'
@@ -515,25 +504,25 @@ globals:
     type: float
     restore_value: yes
     initial_value: '0.3'
-  - id: gpio5_low_count
+  - id: water_flow_missing_counter
     type: int
     restore_value: yes
     initial_value: '0'
 
 number:
   - platform: template
-    name: "Pompa Durata (secondi)"
-    id: pompa_duration_number
+    name: "Nebulization time (secondi)"
+    id: pump_duration_number
     min_value: 10
     max_value: 120
     step: 5
     unit_of_measurement: "s"
     mode: slider
-    lambda: return id(pompa_duration);
+    lambda: return id(pump_duration);
     set_action:
       - lambda: |-
-          id(pompa_duration) = (int)x;
-          ESP_LOGI("pompa", "Duration set to %ds", id(pompa_duration));
+          id(pump_duration) = (int)x;
+          ESP_LOGI("pump", "Duration set to %ds", id(pump_duration));
 
 script:
   - id: rtc_write_time
@@ -636,52 +625,53 @@ script:
             s->tm_year + 1900, s->tm_mon + 1, s->tm_mday,
             s->tm_hour, s->tm_min, s->tm_sec);
 
-  - id: pompa_start
+  - id: pump_start
     then:
       - script.execute: buzzer_start_sequence
+
       - wait_until:
           condition:
             lambda: return !id(buzzer_start_sequence).is_running();
 
       - lambda: |-
           if (!id(device_on)) {
-            ESP_LOGW("pompa", "Device turned OFF during start sequence, aborting");
-            id(pompa_start).stop();
+            ESP_LOGW("pump", "Device turned OFF during start sequence, aborting");
+            id(pump_start).stop();
             return;
           }
 
       - lambda: |-
-          ESP_LOGI("pompa", "Pump ON — %ds cycle", id(pompa_duration));
-          id(pompa_running) = true;
+          ESP_LOGI("pump", "Pump ON — %ds cycle", id(pump_duration));
+          id(action_running) = true;
           id(out_led_green_d6).turn_on();
-          id(sw_pompa_on).turn_on();
+          id(sw_pump_on).turn_on();
 
-      - delay: !lambda return id(pompa_duration) * 1000;  // ms
+      - delay: !lambda return id(pump_duration) * 1000;  // ms
 
-      - script.execute: pompa_stop
+      - script.execute: pump_stop
 
-  - id: pompa_stop
+  - id: pump_stop
     then:
       - output.set_level:
           id: out_buzzer
           level: 0%
       - script.execute: buzzer_stop_sequence
       - lambda: |-
-          ESP_LOGI("pompa", "Pump OFF — cycle complete");
-          id(pompa_running) = false;
-          id(sw_pompa_on).turn_off();
+          ESP_LOGI("pump", "Pump OFF — cycle complete");
+          id(action_running) = false;
+          id(sw_pump_on).turn_off();
           id(out_led_green_d6).turn_off();
       - script.execute: buzzer_stop_sequence
 
-  - id: pompa_force_stop
+  - id: pump_force_stop
     then:
       - output.set_level:
           id: out_buzzer
           level: 0%
       - lambda: |-
-          ESP_LOGI("pompa", "Pump force stopped");
-          id(pompa_running) = false;
-          id(sw_pompa_on).turn_off();
+          ESP_LOGI("pump", "Pump force stopped");
+          id(action_running) = false;
+          id(sw_pump_on).turn_off();
           id(out_led_green_d6).turn_off();
       - script.execute: buzzer_stop_sequence
 
@@ -768,106 +758,147 @@ script:
           id: out_buzzer
           level: 0%
 
-  - id: buzzer_start_sequence
+  - id: buzzer_beep
+    parameters:
+      frequency: float
+      duration_ms: int
+      pause_ms: int
     then:
-      - lambda: |-
-          if (!id(buzzer_enabled)) {
-            ESP_LOGI("buzzer", "Buzzer disabled, skipping");
-            id(buzzer_on_sequence).stop();
-            return;
-          }
-      # Initial long beep
-      - output.set_level:
-          id: out_buzzer
-          level: 50%
-      - output.ledc.set_frequency:
-          id: out_buzzer
-          frequency: 2600Hz
-      - delay: 1030ms
+      - output.turn_on: out_led_green_d6
+      - if:
+          condition:
+            lambda: return id(buzzer_enabled);
+          then:
+            - output.ledc.set_frequency:
+                id: out_buzzer
+                frequency: !lambda return frequency;
+            - output.set_level:
+                id: out_buzzer
+                level: 50%
+      - delay: !lambda return duration_ms;
+      - output.turn_off: out_led_green_d6
       - output.set_level:
           id: out_buzzer
           level: 0%
-      - delay: 940ms
+      - delay: !lambda return pause_ms;
 
-      # Progressively shorter beeps
-      - output.set_level: { id: out_buzzer, level: 50% }
-      - delay: 810ms
-      - output.set_level: { id: out_buzzer, level: 0% }
-      - delay: 790ms
-
-      - output.set_level: { id: out_buzzer, level: 50% }
-      - delay: 660ms
-      - output.set_level: { id: out_buzzer, level: 0% }
-      - delay: 640ms
-
-      - output.set_level: { id: out_buzzer, level: 50% }
-      - delay: 500ms
-      - output.set_level: { id: out_buzzer, level: 0% }
-      - delay: 460ms
-
-      - output.set_level: { id: out_buzzer, level: 50% }
-      - delay: 330ms
-      - output.set_level: { id: out_buzzer, level: 0% }
-      - delay: 280ms
-
-      - output.set_level: { id: out_buzzer, level: 50% }
-      - delay: 310ms
-      - output.set_level: { id: out_buzzer, level: 0% }
-      - delay: 230ms
-
-      - output.set_level: { id: out_buzzer, level: 50% }
-      - delay: 280ms
-      - output.set_level: { id: out_buzzer, level: 0% }
-      - delay: 200ms
-
-      - output.set_level: { id: out_buzzer, level: 50% }
-      - delay: 210ms
-      - output.set_level: { id: out_buzzer, level: 0% }
-      - delay: 190ms
-
-      - output.set_level: { id: out_buzzer, level: 50% }
-      - delay: 160ms
-      - output.set_level: { id: out_buzzer, level: 0% }
-      - delay: 140ms
-
-      - output.set_level: { id: out_buzzer, level: 50% }
-      - delay: 140ms
-      - output.set_level: { id: out_buzzer, level: 0% }
-      - delay: 90ms
-
-      - output.set_level: { id: out_buzzer, level: 50% }
-      - delay: 110ms
-      - output.set_level: { id: out_buzzer, level: 0% }
-      - delay: 60ms
-
-      - output.set_level: { id: out_buzzer, level: 50% }
-      - delay: 80ms
-      - output.set_level: { id: out_buzzer, level: 0% }
-      - delay: 30ms
-
-#      # Two final long beeps
-#      - output.set_level: { id: out_buzzer, level: 50% }
-#      - delay: 450ms
-#      - output.set_level: { id: out_buzzer, level: 0% }
-#      - delay: 10ms
-#
-#      - output.set_level: { id: out_buzzer, level: 50% }
-#      - delay: 1130ms
-#      - output.set_level: { id: out_buzzer, level: 0% }
+  - id: buzzer_start_sequence
+    then:
+      - script.execute:
+          id: buzzer_beep
+          frequency: 2600.0
+          duration_ms: 1030
+          pause_ms: 940
+      - wait_until:
+          condition:
+            lambda: return !id(buzzer_beep).is_running();
+      - script.execute:
+          id: buzzer_beep
+          frequency: 2600.0
+          duration_ms: 810
+          pause_ms: 790
+      - wait_until:
+          condition:
+            lambda: return !id(buzzer_beep).is_running();
+      - script.execute:
+          id: buzzer_beep
+          frequency: 2600.0
+          duration_ms: 660
+          pause_ms: 640
+      - wait_until:
+          condition:
+            lambda: return !id(buzzer_beep).is_running();
+      - script.execute:
+          id: buzzer_beep
+          frequency: 2600.0
+          duration_ms: 500
+          pause_ms: 460
+      - wait_until:
+          condition:
+            lambda: return !id(buzzer_beep).is_running();
+      - script.execute:
+          id: buzzer_beep
+          frequency: 2600.0
+          duration_ms: 330
+          pause_ms: 280
+      - wait_until:
+          condition:
+            lambda: return !id(buzzer_beep).is_running();
+      - script.execute:
+          id: buzzer_beep
+          frequency: 2600.0
+          duration_ms: 310
+          pause_ms: 230
+      - wait_until:
+          condition:
+            lambda: return !id(buzzer_beep).is_running();
+      - script.execute:
+          id: buzzer_beep
+          frequency: 2600.0
+          duration_ms: 280
+          pause_ms: 200
+      - wait_until:
+          condition:
+            lambda: return !id(buzzer_beep).is_running();
+      - script.execute:
+          id: buzzer_beep
+          frequency: 2600.0
+          duration_ms: 210
+          pause_ms: 190
+      - wait_until:
+          condition:
+            lambda: return !id(buzzer_beep).is_running();
+      - script.execute:
+          id: buzzer_beep
+          frequency: 2600.0
+          duration_ms: 160
+          pause_ms: 140
+      - wait_until:
+          condition:
+            lambda: return !id(buzzer_beep).is_running();
+      - script.execute:
+          id: buzzer_beep
+          frequency: 2600.0
+          duration_ms: 140
+          pause_ms: 90
+      - wait_until:
+          condition:
+            lambda: return !id(buzzer_beep).is_running();
+      - script.execute:
+          id: buzzer_beep
+          frequency: 2600.0
+          duration_ms: 110
+          pause_ms: 60
+      - wait_until:
+          condition:
+            lambda: return !id(buzzer_beep).is_running();
+      - script.execute:
+          id: buzzer_beep
+          frequency: 2600.0
+          duration_ms: 80
+          pause_ms: 30
+      - wait_until:
+          condition:
+            lambda: return !id(buzzer_beep).is_running();
+      # Two final long beeps
+      - script.execute:
+          id: buzzer_beep
+          frequency: 2600.0
+          duration_ms: 450
+          pause_ms: 10
+      - wait_until:
+          condition:
+            lambda: return !id(buzzer_beep).is_running();
+      - script.execute:
+          id: buzzer_beep
+          frequency: 2600.0
+          duration_ms: 1130
+          pause_ms: 0
+      - wait_until:
+          condition:
+            lambda: return !id(buzzer_beep).is_running();
 
 interval:
   - interval: 60s
     then:
       - script.execute: rtc_debug_poll
-
-# --- periodic RTC debug read (every minute) --------------------------------
-time:
-  - platform: sntp
-    id: sntp_time
-    timezone: Europe/Rome
-    #servers:
-    #  - 0.it.pool.ntp.org
-    #  - 1.it.pool.ntp.org
-    on_time_sync:
-      then:
-        - script.execute: rtc_write_time
