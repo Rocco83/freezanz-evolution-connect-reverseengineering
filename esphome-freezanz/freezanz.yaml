@@ -83,14 +83,14 @@ button:
         - lambda: 'App.safe_reboot();'
 
   - platform: output
-    name: "SW ON⁄OFF"
+    name: "Power Switch"
     id: sw_onoff_switch
     output: sw_onoff
     duration: 200ms
     entity_category: ""
 
   - platform: template
-    name: "SW Pump ON⁄OFF"
+    name: "Nebulization Start/Stop"
     id: sw_pump_on_switch
     entity_category: ""
     on_press:
@@ -164,6 +164,31 @@ sensor:
     unit_of_measurement: "events"
     entity_category: "diagnostic"
 
+  - platform: template
+    name: "Nebulization Time Remaining"
+    id: pump_time_remaining
+    unit_of_measurement: "s"
+    accuracy_decimals: 0
+    device_class: duration
+    lambda: |-
+      if (!id(action_running)) return 0;
+      int elapsed = (int)(::time(nullptr) - id(pump_start_time));
+      int remaining = id(pump_duration) - elapsed;
+      return remaining > 0 ? remaining : 0;
+    update_interval: 1s
+
+  - platform: template
+    name: "Nebulization Progress"
+    id: pump_progress
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    lambda: |-
+      if (!id(action_running)) return 0;
+      int elapsed = (int)(::time(nullptr) - id(pump_start_time));
+      float progress = (float)elapsed / (float)id(pump_duration) * 100.0f;
+      return progress > 100.0f ? 100.0f : progress;
+    update_interval: 1s
+
   # GPIO36 (SENSOR_VP) — input-only ADC, no pullup available
   - platform: adc
     pin: GPIO36
@@ -209,6 +234,25 @@ time:
         - script.execute: rtc_write_time
 
 binary_sensor:
+  # LED status indicators — read-only, reflect actual output state
+  - platform: template
+    name: "WiFi Connected"
+    id: status_led_blue
+    device_class: connectivity
+    lambda: return id(sw_led_blue_d3).state;
+
+  - platform: template
+    name: "Power"
+    id: status_led_green_d7
+    device_class: running
+    lambda: return id(sw_led_green_d7).state;
+
+  - platform: template
+    name: "Nebulization"
+    id: status_led_green_d6
+    device_class: running
+    lambda: return id(sw_led_green_d6).state;
+
   # SW2 — ON/OFF button (GPIO33, active LOW, internal pull-up)
   - platform: gpio
     pin:
@@ -297,15 +341,23 @@ binary_sensor:
         pulldown: false # pulldown should be external on PCB
       inverted: true # HIGH = water OK, LOW = no water
     name: "Water Flow Missing"
+    device_class: problem
     id: sensor_water_flow
     filters:
-      - delayed_on: 200ms
+      - delayed_on: 500ms
       - delayed_off: 200ms
     on_press:
       then:
         - lambda: |-
             id(water_flow_missing_counter)++;
             ESP_LOGI("water", "Flow sensor LOW (no water) — count: %d", id(water_flow_missing_counter));
+            // Stop pump immediately to prevent dry-run damage
+            if (id(action_running)) {
+              ESP_LOGW("water", "No water detected — stopping pump immediately");
+              id(pump_start).stop();
+              id(pump_stop).stop();
+              id(pump_force_stop).execute();
+            }
     on_release:
       then:
         - lambda: |-
@@ -417,9 +469,9 @@ select:
     on_value:
       then:
         - lambda: |-
-            if (x == "basso") { id(buzzer_duty) = 0.1; }
-            if (x == "medio") { id(buzzer_duty) = 0.3; }
-            if (x == "alto")  { id(buzzer_duty) = 0.5; }
+            if (x == "low") { id(buzzer_duty) = 0.1; }
+            if (x == "medium") { id(buzzer_duty) = 0.3; }
+            if (x == "high")  { id(buzzer_duty) = 0.5; }
             ESP_LOGI("buzzer", "Volume set to %s (duty=%.1f)", x.c_str(), id(buzzer_duty));
 
 switch:
@@ -451,24 +503,34 @@ switch:
           level: 0%
 
   - platform: output
-    name: "Green LED - Nebulization in progress"
+    name: "Nebulization"
     id: sw_led_green_d6
     output: out_led_green_d6
+    entity_category: "diagnostic"
 
   - platform: output
-    name: "Blue LED - WiFi Connected"
+    name: "WiFi Connected"
     id: sw_led_blue_d3
     output: out_led_blue_d3
+    entity_category: "diagnostic"
 
   - platform: output
-    name: "Red LED - Lack water"
+    name: "Water missing"
     id: sw_led_red_d7
     output: out_led_red_d7
+    entity_category: "diagnostic"
+    on_turn_on:
+      then:
+        - switch.turn_off: sw_led_green_d7
 
   - platform: output
-    name: "Green LED - Readiness"
+    name: "Power LED"
     id: sw_led_green_d7
     output: out_led_green_d7
+    entity_category: "diagnostic"
+    on_turn_on:
+      then:
+        - switch.turn_off: sw_led_red_d7
 
 
 i2c:
@@ -496,6 +558,10 @@ globals:
     type: int
     restore_value: yes
     initial_value: '10'
+  - id: pump_start_time
+    type: int
+    restore_value: no
+    initial_value: '0'
   - id: buzzer_enabled
     type: bool
     restore_value: yes
@@ -511,7 +577,7 @@ globals:
 
 number:
   - platform: template
-    name: "Nebulization time (secondi)"
+    name: "Nebulization time (seconds)"
     id: pump_duration_number
     min_value: 10
     max_value: 120
@@ -643,6 +709,7 @@ script:
       - lambda: |-
           ESP_LOGI("pump", "Pump ON — %ds cycle", id(pump_duration));
           id(action_running) = true;
+          id(pump_start_time) = (int)::time(nullptr);
           id(out_led_green_d6).turn_on();
           id(sw_pump_on).turn_on();
 
