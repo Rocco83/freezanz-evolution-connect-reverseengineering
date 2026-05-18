@@ -66,7 +66,7 @@ Progettato per collegare moduli I2C esterni (display, sensori) o periferiche dig
 |--------|-----------------|-----------------------------------------------|------|
 | 1      | VCC / BATT+     | Diretta dalla rail P+                         | Alimentazione 12V |
 | 2      | VCC filtrato    | Via resistenza 0.2Ω (jumper/sense)            | VCC con lieve filtraggio |
-| 3      | VCC pull-up I2C | → R452 (3K3) → GPIO22 (SCL) / → R455 (3K3) → GPIO21 (SDA) | Pull-up esterno per bus I2C. Alimentare questo pin per attivare i pull-up su SCL e SDA |
+| 3      | VCC 3.3v        | Diretta da pin 3.3v ESP32                     | VCC per i2c esterno |
 | 4      | GND             | —                                             | Riferimento comune |
 | 5      | SDA (GPIO21)    | Via R65 (120Ω)                                | I2C Data |
 | 6      | GPIO5           | Via R36 (470Ω)                                | Condiviso con P1 pin 3 (sensore acqua) |
@@ -497,4 +497,6 @@ Quando entrambi i test passano, l’emulazione del pulsante e il segnale RTC son
 * [x] Phase‑2 test: board re‑installed in unit.
 * [ ] SENSOR\_VP/VN: log ADC values in real operation.
 * [ ] Draw partial schematic in KiCad.
+* [ ] Understand how the serial port of the original firmware is working
+* [ ] Understand how to lower the volume of the buzzer
 
