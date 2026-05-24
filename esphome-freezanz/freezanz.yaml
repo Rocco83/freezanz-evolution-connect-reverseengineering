@@ -7,6 +7,9 @@ esphome:
     then:
       - script.execute: update_status_led
       - script.execute: rtc_read_time
+      - lambda: |-
+          id(pump_time_remaining).publish_state(NAN);
+          id(pump_progress).publish_state(NAN);
 
 esp32:
   board: esp32dev
@@ -71,6 +74,7 @@ button:
     name: "ESPHome Restart"
     id: btn_restart
     entity_category: "config"
+    icon: "mdi:restart"
     on_press:
       then:
         - lambda: |-
@@ -97,12 +101,14 @@ button:
   - platform: output
     name: "Power Switch"
     id: sw_onoff_switch
+    icon: "mdi:power"
+    entity_category: "diagnostic"
     output: sw_onoff
     duration: 200ms
-    entity_category: "diagnostic"
 
   - platform: template
     name: "Buzzer ON sequence"
+    icon: "mdi:volume-high"
     entity_category: "diagnostic"
     on_press:
       then:
@@ -110,6 +116,7 @@ button:
 
   - platform: template
     name: "Buzzer OFF sequence"
+    icon: "mdi:volume-off"
     entity_category: "diagnostic"
     on_press:
       then:
@@ -117,6 +124,7 @@ button:
 
   - platform: template
     name: "Buzzer Alarm sequence"
+    icon: "mdi:alarm-light"
     entity_category: "diagnostic"
     on_press:
       then:
@@ -124,6 +132,7 @@ button:
 
   - platform: template
     name: "Buzzer Stop sequence"
+    icon: "mdi:stop"
     entity_category: "diagnostic"
     on_press:
       then:
@@ -133,6 +142,7 @@ text_sensor:
   - platform: template
     name: "OTA Partition"
     id: ota_partition
+    icon: "mdi:chip"
     entity_category: "diagnostic"
     lambda: |-
       const esp_partition_t *p = esp_ota_get_running_partition();
@@ -148,8 +158,10 @@ text_sensor:
   - platform: wifi_info
     ip_address:
       name: "Freezanz IP Address"
+      icon: "mdi:ip-network"
     mac_address:
       name: "Freezanz MAC Address"
+      icon: "mdi:network"
 
 # Optional
   - platform: template
@@ -168,11 +180,13 @@ sensor:
   - platform: wifi_signal
     name: "WiFi Signal (RSSI)"
     update_interval: 60s
+    icon: "mdi:wifi"
     entity_category: "diagnostic"
 
   - platform: template
     name: "GPIO5 P1 Low Count"
     id: water_flow_missing_counter_sensor
+    icon: "mdi:counter"
     lambda: return id(water_flow_missing_counter);
     update_interval: 10s
     accuracy_decimals: 0
@@ -182,13 +196,19 @@ sensor:
   - platform: template
     name: "Nebulization Time Remaining"
     id: pump_time_remaining
+    icon: "mdi:timer"
     unit_of_measurement: "s"
     accuracy_decimals: 0
     device_class: duration
     lambda: |-
-      if (!id(action_running)) return {};
-      int elapsed = (int)(::time(nullptr) - id(pump_start_time));
-      int remaining = id(pump_duration_number).state - elapsed;
+      if (!id(action_running) && !id(pre_cycle_running)) return {};
+      int remaining;
+      int elapsed = (int)((millis() - id(pump_start_time)) / 1000);
+      if (id(pre_cycle_running)) {
+        remaining = id(pre_cycle_duration) - elapsed;
+      } else {
+        remaining = id(pump_duration_number).state - elapsed;
+      }
       float result = remaining > 0 ? (float)remaining : 0.0f;
       ESP_LOGI("pump", "Time remaining: %.0fs", result);
       return result;
@@ -197,11 +217,12 @@ sensor:
   - platform: template
     name: "Nebulization Progress"
     id: pump_progress
+    icon: "mdi:progress-clock"
     unit_of_measurement: "%"
     accuracy_decimals: 0
     lambda: |-
       if (!id(action_running)) return {};
-      int elapsed = (int)(::time(nullptr) - id(pump_start_time));
+      int elapsed = (int)((millis() - id(pump_start_time)) / 1000);
       float progress = (float)elapsed / (float)id(pump_duration_number).state * 100.0f;
       return progress > 100.0f ? 100.0f : progress;
     update_interval: 1s
@@ -211,6 +232,7 @@ sensor:
     pin: GPIO36
     name: "Debug ADC GPIO36 VP"
     id: debug_adc36
+    icon: "mdi:bug"
     update_interval: 5s
     attenuation: 12db
     entity_category: "diagnostic"
@@ -222,6 +244,7 @@ sensor:
     pin: GPIO39
     name: "Debug ADC GPIO39 VN"
     id: debug_adc39
+    icon: "mdi:bug"
     update_interval: 5s
     attenuation: 12db
     entity_category: "diagnostic"
@@ -233,6 +256,7 @@ sensor:
     pin: GPIO34
     name: "Debug ADC GPIO34"
     id: debug_adc34
+    icon: "mdi:bug"
     update_interval: 5s
     attenuation: 12db
     entity_category: "diagnostic"
@@ -244,6 +268,7 @@ sensor:
     pin: GPIO35
     name: "Debug ADC GPIO35"
     id: debug_adc35
+    icon: "mdi:bug"
     update_interval: 5s
     attenuation: 12db
     entity_category: "diagnostic"
@@ -279,18 +304,21 @@ binary_sensor:
   - platform: template
     name: "WiFi Connected"
     id: status_led_blue
+    icon: "mdi:wifi"
     device_class: connectivity
     lambda: return id(sw_led_blue_d3).state;
 
   - platform: template
     name: "Power Led"
     id: status_led_green_d7
+    icon: "mdi:power"
     device_class: running
     lambda: return id(sw_led_green_d7).state;
 
   - platform: template
     name: "Nebulization"
     id: status_led_green_d6
+    icon: "mdi:spray"
     device_class: running
     lambda: return id(sw_led_green_d6).state;
 
@@ -304,18 +332,27 @@ binary_sensor:
       inverted: true
     name: "Button ON⁄OFF"
     entity_category: ""
+    icon: "mdi:power"
     id: btn_onoff
     filters:
       - delayed_on: 20ms
       - delayed_off: 20ms
-    on_press:
-      then:
-        - lambda: |-
-            if (id(sw_device_onoff).state) {
-              id(sw_device_onoff).turn_off();
-            } else {
-              id(sw_device_onoff).turn_on();
-            }
+    on_click:
+      # 0-3 sec: power on/off
+      - min_length: 0ms
+        max_length: 3000ms
+        then:
+          - lambda: |-
+              if (id(sw_device_onoff).state) {
+                id(sw_device_onoff).turn_off();
+              } else {
+                id(sw_device_onoff).turn_on();
+              }
+      # >3s restart
+      - min_length: 3000ms
+        max_length: 10000ms
+        then:
+          - button.press: btn_restart
   # SW3 — START/STOP button (GPIO32, active LOW, internal pull-up)
   - platform: gpio
     pin:
@@ -326,6 +363,7 @@ binary_sensor:
       inverted: true
     name: "Button Start⁄Stop"
     id: btn_startstop
+    icon: "mdi:play-pause"
     entity_category: "diagnostic"
     filters:
       - delayed_on: 20ms
@@ -354,6 +392,7 @@ binary_sensor:
         pullup: true
     name: "Debug GPIO2 RTC SQW state"
     id: debug_gpio2
+    icon: "mdi:bug"
     entity_category: "diagnostic"
 
   # GPIO4 — unused, safe to probe
@@ -365,6 +404,7 @@ binary_sensor:
         pullup: true
     name: "Debug GPIO4"
     id: debug_gpio4
+    icon: "mdi:bug"
     entity_category: "diagnostic"
 
   # GPIO5 — P1 connector external I/O (boot strapping: must be HIGH at boot)
@@ -373,33 +413,36 @@ binary_sensor:
       number: GPIO5
       mode:
         input: true
-        pullup: false   # no pullup — signal is externally driven
-        pulldown: false # pulldown should be external on PCB
-      inverted: true # HIGH = water OK, LOW = no water
-    name: "Water Flow Missing"
-    device_class: problem
+        pullup: false
+        pulldown: false
+      inverted: false
+    name: "Water Pressure Raw"
+    id: sensor_water_flow_raw
+    entity_category: "diagnostic"
+    icon: "mdi:bug"
+
+  - platform: template
+    name: "Water Pressure"
+    device_class: running
     id: sensor_water_flow
+    icon: "mdi:water-pump"
+    lambda: |-
+      return id(sensor_water_flow_raw).state;
     filters:
       - delayed_on: 500ms
-      - delayed_off: 200ms
+      - delayed_off: 10ms
     on_press:
       then:
         - lambda: |-
-            id(water_flow_missing_counter)++;
-            ESP_LOGI("water", "Flow sensor LOW (no water) — count: %d", id(water_flow_missing_counter));
-            // Stop pump immediately to prevent dry-run damage
-            if (id(action_running)) {
-              ESP_LOGW("water", "No water detected — stopping pump immediately");
-              id(pump_start).stop();
-              id(pump_stop).stop();
-              id(pump_force_stop).execute();
-            }
+            ESP_LOGI("water", "Water pressure OK — count of missed water events: %d", id(water_flow_missing_counter));
+        - script.execute: water_pressure_watchdog 
         - script.execute: update_status_led
     on_release:
       then:
         - lambda: |-
-            ESP_LOGI("water", "Flow sensor HIGH (water OK) — total events: %d", id(water_flow_missing_counter));
-            //id(water_flow_missing_counter)=0;
+            id(water_flow_missing_counter)++;
+            ESP_LOGI("water", "Water pressure lost — total missing water events: %d", id(water_flow_missing_counter));
+        - script.execute: water_pressure_watchdog 
         - script.execute: update_status_led
 
   # GPIO14 — undocumented, verify
@@ -411,6 +454,7 @@ binary_sensor:
         pullup: true
     name: "Debug GPIO14"
     id: debug_gpio14
+    icon: "mdi:bug"
     entity_category: "diagnostic"
 
   # GPIO16 — unused
@@ -422,6 +466,7 @@ binary_sensor:
         pullup: true
     name: "Debug GPIO16"
     id: debug_gpio16
+    icon: "mdi:bug"
     entity_category: "diagnostic"
 
   # GPIO17 — unused
@@ -433,13 +478,7 @@ binary_sensor:
         pullup: true
     name: "Debug GPIO17"
     id: debug_gpio17
-    entity_category: "diagnostic"
-
-  - platform: template
-    name: "Debug device_on value"
-    id: debug_device_on
-    lambda: |-
-      return id(sw_device_onoff).state;
+    icon: "mdi:bug"
     entity_category: "diagnostic"
 
 # Optional
@@ -448,19 +487,24 @@ binary_sensor:
   - platform: gpio
     name: "Concentrate Level S0 (min)"
     id: level_s0
+    icon: "mdi:gauge-empty"
     entity_category: "diagnostic"
     pin:
       mcp23xxx: mcp23017_hub
       number: 0
       mode:
         input: true
-        pullup: true
+        pullup: false
       inverted: true
     filters:
-      - delayed_on: 500ms
-      - delayed_off: 500ms
+      #- delayed_on: 500ms
+      #- delayed_off: 500ms
+      - delayed_on: 10ms
+      - delayed_off: 10ms
     on_state:
       then:
+        - lambda: |-
+            ESP_LOGW("level", "S0 state changed: %d", id(level_s0).state);
         - lambda: |-
             // If any sensor sees liquid, clear the orange warning
             if (id(level_s0).state || id(level_s1).state ||
@@ -469,17 +513,20 @@ binary_sensor:
             } else {
               id(out_led_red_d7).turn_on();  // all dry → orange
             }
+        - lambda: |-
+            ESP_LOGW("level", "S0 state changed: %d", id(level_s0).state);
 
   - platform: gpio
     name: "Concentrate Level S1"
     id: level_s1
+    icon: "mdi:gauge-low"
     entity_category: "diagnostic"
     pin:
       mcp23xxx: mcp23017_hub
       number: 1
       mode:
         input: true
-        pullup: true
+        pullup: false
       inverted: true
     filters:
       - delayed_on: 500ms
@@ -488,13 +535,14 @@ binary_sensor:
   - platform: gpio
     name: "Concentrate Level S2"
     id: level_s2
+    icon: "mdi:gauge"
     entity_category: "diagnostic"
     pin:
       mcp23xxx: mcp23017_hub
       number: 2
       mode:
         input: true
-        pullup: true
+        pullup: false
       inverted: true
     filters:
       - delayed_on: 500ms
@@ -503,13 +551,14 @@ binary_sensor:
   - platform: gpio
     name: "Concentrate Level S3 (Max)"
     id: level_s3
+    icon: "mdi:gauge-full"
     entity_category: "diagnostic"
     pin:
       mcp23xxx: mcp23017_hub
       number: 3
       mode:
         input: true
-        pullup: true
+        pullup: false
       inverted: true
     filters:
       - delayed_on: 500ms
@@ -560,6 +609,7 @@ select:
   - platform: template
     name: "Buzzer Frequency"
     id: buzzer_freq
+    icon: "mdi:sine-wave"
     entity_category: "diagnostic"
     options:
       - "1500"
@@ -577,6 +627,7 @@ select:
   - platform: template
     name: "Buzzer Volume"
     id: buzzer_volume_select
+    icon: "mdi:volume-medium"
     entity_category: "diagnostic"
     options:
       - "low"
@@ -596,61 +647,45 @@ switch:
   - platform: template
     name: "Device ON⁄OFF"
     id: sw_device_onoff
+    icon: "mdi:power"
     restore_mode: RESTORE_DEFAULT_OFF
     optimistic: true
     turn_on_action:
       - lambda: |-
           id(buzzer_on_sequence).execute();
           ESP_LOGI("onoff", "Device ON");
-      - script.execute: update_status_led
     turn_off_action:
       - lambda: |-
           id(buzzer_off_sequence).execute();
           ESP_LOGI("onoff", "Device OFF");
+    # executed at every change, also turn_of and turn_off
+    on_state:
       - script.execute: update_status_led
 
   - platform: template
     name: "Nebulization Start⁄Stop"
     id: sw_nebulization
+    icon: "mdi:spray"
     restore_mode: ALWAYS_OFF
-    lambda: return id(action_running);
+    lambda: return id(action_running) || id(pre_cycle_running);
     turn_on_action:
       - lambda: |-
           if (!id(sw_device_onoff).state) {
             ESP_LOGW("pump", "Device is OFF, blocking pump activation");
             return;
           }
+          ESP_LOGI("pump", "Started nebulization pre-cycle - audible warning");
           id(pump_start).execute();
     turn_off_action:
       - lambda: |-
           id(pump_start).stop();
           id(pump_stop).stop();
           id(pump_force_stop).execute();
-#    turn_on_action:
-#      - lambda: |-
-#          if (!id(sw_device_onoff).state) {
-#            ESP_LOGW("pump", "Device is OFF, blocking pump activation");
-#            return;
-#          }
-#          if (id(action_running)) {
-#            ESP_LOGW("pump", "Pump already running");
-#            return;
-#          }
-#          id(pump_start).execute();
-#    turn_off_action:
-#      - lambda: |-
-#          if (!id(action_running)) {
-#            ESP_LOGW("pump", "Pump already stopped");
-#            return;
-#          }
-#          ESP_LOGI("pump", "Pump running — stopping");
-#          id(pump_start).stop();
-#          id(pump_stop).stop();
-#          id(pump_force_stop).execute();
 
   - platform: template
     name: "Buzzer Enable"
     id: buzzer_enable_switch
+    icon: "mdi:bell"
     restore_mode: RESTORE_DEFAULT_ON
     turn_on_action:
       - lambda: |-
@@ -662,6 +697,7 @@ switch:
   - platform: template
     name: "Buzzer Test"
     id: buzzer_test
+    icon: "mdi:bell-ring"
     entity_category: "diagnostic"
     optimistic: true
     on_turn_on:
@@ -674,22 +710,25 @@ switch:
           level: 0%
 
   - platform: output
-    name: "Nebulization"
+    name: "Nebulization LED"
     id: sw_led_green_d6
+    icon: "mdi:spray"
     output: out_led_green_d6
     entity_category: "diagnostic"
 
   - platform: output
     name: "WiFi Connected"
     id: sw_led_blue_d3
+    icon: "mdi:wifi"
     output: out_led_blue_d3
     entity_category: "diagnostic"
 
   - platform: output
     name: "Water missing"
     id: sw_led_red_d7
-    output: out_led_red_d7
+    icon: "mdi:water-alert"
     entity_category: "diagnostic"
+    output: out_led_red_d7
     on_turn_on:
       then:
         - script.execute: update_status_led
@@ -697,11 +736,19 @@ switch:
   - platform: output
     name: "Power LED"
     id: sw_led_green_d7
-    output: out_led_green_d7
+    icon: "mdi:led-on"
     entity_category: "diagnostic"
+    output: out_led_green_d7
     on_turn_on:
       then:
         - switch.turn_off: sw_led_red_d7
+
+  - platform: output
+    name: "Debug Pump Relay"
+    id: sw_pump_on_switch
+    output: sw_pump_on
+    entity_category: "diagnostic"
+    icon: "mdi:pump"
 
 
 i2c:
@@ -709,7 +756,8 @@ i2c:
   scl: GPIO22
   scan: true
   #frequency: 100kHz
-  frequency: 10kHz
+  #frequency: 10kHz
+  frequency: 5kHz
   id: bus_i2c
 
 # --- RTC helpers -----------------------------------------------------------
@@ -722,8 +770,16 @@ globals:
     type: bool
     restore_value: no
     initial_value: 'false'
-  - id: pump_start_time
+  - id: pre_cycle_running
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+  - id: pre_cycle_duration
     type: int
+    restore_value: no
+    initial_value: '10'
+  - id: pump_start_time
+    type: uint32_t
     restore_value: no
     initial_value: '0'
   - id: buzzer_duty
@@ -739,6 +795,7 @@ number:
   - platform: template
     name: "Nebulization time (seconds)"
     id: pump_duration_number
+    icon: "mdi:timer-edit"
     min_value: 10
     max_value: 120
     step: 5
@@ -855,15 +912,40 @@ script:
             s->tm_year + 1900, s->tm_mon + 1, s->tm_mday,
             s->tm_hour, s->tm_min, s->tm_sec);
 
+  - id: water_pressure_watchdog
+    mode: restart
+    then:
+      - while:
+          condition:
+            lambda: return id(sw_pump_on_switch).state;
+          then:
+            - if:
+                condition:
+                  lambda: return !id(sensor_water_flow).state;
+                then:
+                  - delay: 5s
+                  - if:
+                      condition:
+                        lambda: return !id(sensor_water_flow).state && id(sw_pump_on_switch).state;
+                      then:
+                        - lambda: |-
+                            ESP_LOGW("water", "No water for 5s — stopping pump");
+                            id(pump_start).stop();
+                            id(pump_stop).stop();
+                            id(pump_force_stop).execute();
+            - delay: 1s
+
   - id: pump_start
     then:
       - lambda: |-
+          // exit if no mosquito liquid is found
           if (!id(level_s0).state && !id(level_s1).state &&
               !id(level_s2).state && !id(level_s3).state) {
             ESP_LOGW("pump", "Empty tank — pump blocked");
             id(pump_start).stop();
             return;
           }
+
 
       # ensure that the led turn orange
       - script.execute: update_status_led
@@ -884,9 +966,10 @@ script:
 
       - lambda: |-
           ESP_LOGI("pump", "Pump ON — %ds cycle", (int)id(pump_duration_number).state);
+          // reset to 0 the timer - in case of time drift
+          id(pump_start_time) = millis();
           id(action_running) = true;
-          id(pump_start_time) = (int)::time(nullptr);
-          id(sw_pump_on).turn_on();
+          id(sw_pump_on_switch).turn_on();
 
       - script.execute: update_status_led
 
@@ -903,7 +986,9 @@ script:
       - lambda: |-
           ESP_LOGI("pump", "Pump OFF — cycle complete");
           id(action_running) = false;
-          id(sw_pump_on).turn_off();
+          id(sw_pump_on_switch).turn_off();
+          id(pump_time_remaining).publish_state(NAN);
+          id(pump_progress).publish_state(NAN);
       - output.turn_off: out_led_green_d6
       - script.execute: update_status_led
       - script.execute: buzzer_stop_sequence
@@ -916,8 +1001,11 @@ script:
           level: 0%
       - lambda: |-
           ESP_LOGI("pump", "Pump force stopped");
+          id(pre_cycle_running) = false;
           id(action_running) = false;
-          id(sw_pump_on).turn_off();
+          id(sw_pump_on_switch).turn_off();
+          id(pump_time_remaining).publish_state(NAN);
+          id(pump_progress).publish_state(NAN);
       - script.execute: update_status_led
       - script.execute: buzzer_stop_sequence
 
@@ -987,9 +1075,9 @@ script:
   - id: buzzer_stop_sequence
     then:
       - lambda: |-
+          id(buzzer_on_sequence).stop(); // why?
           if (!id(buzzer_enable_switch).state) {
             ESP_LOGI("buzzer", "Buzzer disabled, skipping");
-            id(buzzer_on_sequence).stop();
             return;
           }
       - output.ledc.set_frequency:
@@ -1030,6 +1118,12 @@ script:
 
   - id: buzzer_start_sequence
     then:
+      - lambda: |-
+          ESP_LOGI("buzzer", "Started nebulization pre-cycle - audible warning");
+          // start with a negative number to show the countdown
+          id(pump_start_time) = millis();
+          id(pre_cycle_running) = true;
+
       - script.execute:
           id: buzzer_beep
           frequency: 2600.0
@@ -1144,6 +1238,11 @@ script:
           condition:
             lambda: return !id(buzzer_beep).is_running();
 
+      - lambda: |-
+          ESP_LOGI("buzzer", "Completed nebulization pre-cycle - audible warning");
+          // start with a negative number to show the countdown
+          id(pre_cycle_running) = false;
+
   - id: update_status_led
     then:
       - lambda: |-
@@ -1159,7 +1258,7 @@ script:
             ESP_LOGW("led", "Empty Tank -> LED orange");
             return;
           }
-          if (id(sensor_water_flow).state) {
+          if (!id(sensor_water_flow).state) {
             id(out_led_green_d7).turn_off();
             id(out_led_red_d7).turn_on();
             ESP_LOGW("led", "Water flow missing -> LED red");
@@ -1173,6 +1272,70 @@ interval:
   - interval: 60s
     then:
       - script.execute: rtc_debug_poll
+  - interval: 5s
+    then:
+      - lambda: |-
+          ESP_LOGW("level", "S0=%d S1=%d S2=%d S3=%d",
+            id(level_s0).state, id(level_s1).state,
+            id(level_s2).state, id(level_s3).state);
+
+      - lambda: |-
+          uint8_t reg;
+          uint8_t valA = 0;
+          uint8_t valB = 0;
+          // Read port A
+          reg = 0x12;
+          id(bus_i2c).write(0x20, &reg, 1, false);
+          id(bus_i2c).read(0x20, &valA, 1);
+          // Read port B
+          reg = 0x13;
+          id(bus_i2c).write(0x20, &reg, 1, false);
+          id(bus_i2c).read(0x20, &valB, 1);
+          ESP_LOGW("mcp", "A0=%d A1=%d A2=%d A3=%d A4=%d A5=%d A6=%d A7=%d | B0=%d B1=%d B2=%d B3=%d B4=%d B5=%d B6=%d B7=%d",
+            (valA>>0)&1, (valA>>1)&1, (valA>>2)&1, (valA>>3)&1,
+            (valA>>4)&1, (valA>>5)&1, (valA>>6)&1, (valA>>7)&1,
+            (valB>>0)&1, (valB>>1)&1, (valB>>2)&1, (valB>>3)&1,
+            (valB>>4)&1, (valB>>5)&1, (valB>>6)&1, (valB>>7)&1);
+
+      - lambda: |-
+          uint8_t reg = 0x12;  // GPIO register port A
+          uint8_t val = 0;
+          id(bus_i2c).write(0x20, &reg, 1, false);
+          id(bus_i2c).read(0x20, &val, 1);
+          ESP_LOGW("mcp", "GPIO port A raw = 0x%02X", val);
+
+      - lambda: |-
+          uint8_t reg = 0x13;  // GPIO register port B
+          uint8_t val = 0;
+          id(bus_i2c).write(0x20, &reg, 1, false);
+          id(bus_i2c).read(0x20, &val, 1);
+          ESP_LOGW("mcp", "GPIO port B raw = 0x%02X", val);
+
+      - lambda: |-
+          uint8_t reg = 0x00;  // IODIRA register
+          uint8_t val = 0;
+          id(bus_i2c).write(0x20, &reg, 1, false);
+          id(bus_i2c).read(0x20, &val, 1);
+          ESP_LOGW("mcp", "IODIRA = 0x%02X (0xFF = all input)", val);
+          
+          reg = 0x12;  // GPIOA register
+          id(bus_i2c).write(0x20, &reg, 1, false);
+          id(bus_i2c).read(0x20, &val, 1);
+          ESP_LOGW("mcp", "GPIOA raw = 0x%02X", val);
+
+      - lambda: |-
+          uint8_t reg;
+          uint8_t val;
+          // IODIRB
+          reg = 0x01;
+          id(bus_i2c).write(0x20, &reg, 1, false);
+          id(bus_i2c).read(0x20, &val, 1);
+          ESP_LOGW("mcp", "IODIRB = 0x%02X (0xFF = all input)", val);
+          // GPIOB
+          reg = 0x13;
+          id(bus_i2c).write(0x20, &reg, 1, false);
+          id(bus_i2c).read(0x20, &val, 1);
+          ESP_LOGW("mcp", "GPIOB raw = 0x%02X", val);
 
 # addon
 mcp23017:
