@@ -326,12 +326,12 @@ binary_sensor:
       return id(sw_device_onoff).state;
 
   - platform: template
-    name: "Repellent LED"
+    name: "Repellent Missing LED"
     id: status_repellent_led
     device_class: problem
     icon: "mdi:bottle-tonic"
     lambda: |-
-      return id(repellent_level_s0).state;
+      return !(id(repellent_level_s0).state);
 
   # SW2 — ON/OFF button (GPIO33, active LOW, internal pull-up)
   - platform: gpio
@@ -431,6 +431,17 @@ binary_sensor:
     id: sensor_water_flow_raw
     entity_category: "diagnostic"
     icon: "mdi:bug"
+    on_state:
+      then:
+        - lambda: |-
+            static uint32_t last_change = 0;
+            uint32_t now = millis();
+            uint32_t duration = now - last_change;
+            ESP_LOGI("water", "Water Pressure Raw -> %s (was %s for %dms)",
+              x ? "ON" : "OFF",
+              x ? "OFF" : "ON",
+              duration);
+            last_change = now;
 
   - platform: template
     name: "Water Pressure"
@@ -440,8 +451,8 @@ binary_sensor:
     lambda: |-
       return id(sensor_water_flow_raw).state;
     filters:
-      - delayed_on: 500ms
-      - delayed_off: 10ms
+      - delayed_on: 50ms
+      - delayed_off: 500ms
     on_press:
       then:
         - lambda: |-
@@ -722,21 +733,21 @@ switch:
           level: 0%
 
   - platform: output
-    name: "Nebulization LED - D6"
+    name: "LED D6 - Green (Nebulization)"
     id: sw_led_green_d6
     icon: "mdi:spray"
     output: out_led_green_d6
     entity_category: "diagnostic"
 
   - platform: output
-    name: "WiFi Connected LED - D3"
+    name: "LED D3 - Blue (WiFi)"
     id: sw_led_blue_d3
     icon: "mdi:wifi"
     output: out_led_blue_d3
     entity_category: "diagnostic"
 
   - platform: output
-    name: "Water missing LED"
+    name: "LED D7 Red (Water Missing + Repellent Orange)"
     id: sw_led_red_d7
     icon: "mdi:water-alert"
     entity_category: "diagnostic"
@@ -746,7 +757,7 @@ switch:
         - script.execute: update_sensors
 
   - platform: output
-    name: "Power LED"
+    name: "LED D7 Green (Power ON + Repellent Orange)"
     id: sw_led_green_d7
     icon: "mdi:led-on"
     entity_category: "diagnostic"
