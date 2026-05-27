@@ -520,9 +520,9 @@ binary_sensor:
             // If any sensor sees liquid, clear the orange warning
             if (id(repellent_level_s0).state || id(repellent_level_s1).state ||
                 id(repellent_level_s2).state || id(repellent_level_s3).state) {
-              id(out_led_red_d7).turn_off();
+              id(sw_led_red_d7).turn_off();
             } else {
-              id(out_led_red_d7).turn_on();  // all dry → orange
+              id(sw_led_red_d7).turn_on();  // all dry → orange
             }
         - lambda: |-
             ESP_LOGW("level", "S0 state changed: %d", id(repellent_level_s0).state);
@@ -1265,25 +1265,25 @@ script:
       # update LED D7 - on/off, water missing, repellent missing
       - lambda: |-
           if (!id(sw_device_onoff).state) {
-            id(out_led_green_d7).turn_off();
-            id(out_led_red_d7).turn_off();
+            id(sw_led_green_d7).turn_off();
+            id(sw_led_red_d7).turn_off();
             return;
           }
           if (!id(repellent_level_s0).state && !id(repellent_level_s1).state &&
               !id(repellent_level_s2).state && !id(repellent_level_s3).state) {
-            id(out_led_green_d7).turn_on();
-            id(out_led_red_d7).turn_on();
+            id(sw_led_green_d7).turn_on();
+            id(sw_led_red_d7).turn_on();
             ESP_LOGW("led", "Empty Tank -> LED orange");
             return;
           }
           if (!id(sensor_water_flow).state) {
-            id(out_led_green_d7).turn_off();
-            id(out_led_red_d7).turn_on();
+            id(sw_led_green_d7).turn_off();
+            id(sw_led_red_d7).turn_on();
             ESP_LOGW("led", "Water flow missing -> LED red");
             return;
           }
-          id(out_led_green_d7).turn_on();
-          id(out_led_red_d7).turn_off();
+          id(sw_led_green_d7).turn_on();
+          id(sw_led_red_d7).turn_off();
           ESP_LOGI("led", "All OK -> LED green");
 
 interval:
