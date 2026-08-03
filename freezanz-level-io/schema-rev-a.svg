@@ -1,0 +1,371 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 1040" width="1300" height="1040">
+<rect width="1300" height="1040" fill="#ffffff"/>
+<text x="24" y="34" font-size="20" text-anchor="start" font-weight="700" fill="#0f172a" font-family="ui-sans-serif,system-ui,sans-serif">Freezanz level I/O — rev A</text>
+<text x="24" y="54" font-size="12" text-anchor="start" font-weight="400" fill="#475569" font-family="ui-sans-serif,system-ui,sans-serif">PCB 90 × 50 mm · tutto THT · ingresso unico IDC 2×4 dal Freezanz J3 · modulo MCP23017 su zoccolo</text>
+<rect x="24" y="72" width="452" height="262" rx="6" fill="#ffffff" stroke="#334155" stroke-width="1.5"/>
+<text x="34" y="91" font-size="13" font-weight="700" fill="#0f172a" font-family="ui-sans-serif,system-ui,sans-serif">INGRESSO — IDC 2×4, prolunga 1:1 dal J3 del Freezanz</text>
+<rect x="38" y="96" width="196" height="154" rx="4" fill="#f1f5f9" stroke="#475569" stroke-width="1.5"/>
+<text x="44" y="111" font-size="11" text-anchor="start" font-weight="700" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">J1</text>
+<text x="228" y="111" font-size="10" text-anchor="end" font-weight="400" fill="#475569" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">IDC 2×4 vert.</text>
+<rect x="43" y="120" width="13" height="12" rx="2" fill="#fecaca"/>
+<text x="49.5" y="129" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">1</text>
+<text x="62" y="130" font-size="10.5" text-anchor="start" font-weight="400" fill="#dc2626" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">+12V_RAW    rail P+</text>
+<path d="M234,126 L246,126" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="43" y="136" width="13" height="12" rx="2" fill="#fecaca"/>
+<text x="49.5" y="145" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">2</text>
+<text x="62" y="146" font-size="10.5" text-anchor="start" font-weight="400" fill="#dc2626" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">+12V_FILT   via 0.2R</text>
+<path d="M234,142 L246,142" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="43" y="152" width="13" height="12" rx="2" fill="#fecaca"/>
+<text x="49.5" y="161" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">3</text>
+<text x="62" y="162" font-size="10.5" text-anchor="start" font-weight="400" fill="#2563eb" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">+3V3        da ESP32</text>
+<path d="M234,158 L246,158" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="43" y="168" width="13" height="12" rx="2" fill="#fecaca"/>
+<text x="49.5" y="177" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">4</text>
+<text x="62" y="178" font-size="10.5" text-anchor="start" font-weight="400" fill="#334155" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">GND</text>
+<path d="M234,174 L246,174" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="43" y="184" width="13" height="12" rx="2" fill="#fecaca"/>
+<text x="49.5" y="193" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">5</text>
+<text x="62" y="194" font-size="10.5" text-anchor="start" font-weight="400" fill="#059669" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">SDA   GPIO21 / R65 120R</text>
+<path d="M234,190 L246,190" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="43" y="200" width="13" height="12" rx="2" fill="#fecaca"/>
+<text x="49.5" y="209" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">6</text>
+<text x="62" y="210" font-size="10.5" text-anchor="start" font-weight="400" fill="#7c3aed" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">GPIO5        / R36 470R</text>
+<path d="M234,206 L246,206" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="43" y="216" width="13" height="12" rx="2" fill="#fecaca"/>
+<text x="49.5" y="225" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">7</text>
+<text x="62" y="226" font-size="10.5" text-anchor="start" font-weight="400" fill="#059669" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">SCL   GPIO22 / R66 120R</text>
+<path d="M234,222 L246,222" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="43" y="232" width="13" height="12" rx="2" fill="#fecaca"/>
+<text x="49.5" y="241" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">8</text>
+<text x="62" y="242" font-size="10.5" text-anchor="start" font-weight="400" fill="#7c3aed" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">GPIO15       / R89 470R</text>
+<path d="M234,238 L246,238" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<text x="38" y="268" font-size="10.5" text-anchor="start" font-weight="400" fill="#475569" font-family="ui-sans-serif,system-ui,sans-serif">Numerazione IDC a zig-zag: dispari una fila, pari l'altra.</text>
+<text x="38" y="286" font-size="10.5" text-anchor="start" font-weight="400" fill="#b91c1c" font-family="ui-sans-serif,system-ui,sans-serif">SDA/SCL hanno già 120 Ω in serie e pull-up 3k3 sulla scheda Freezanz —</text>
+<text x="38" y="302" font-size="10.5" text-anchor="start" font-weight="400" fill="#b91c1c" font-family="ui-sans-serif,system-ui,sans-serif">per questo R1/R2 restano piazzole vuote.</text>
+<text x="38" y="322" font-size="10.5" text-anchor="start" font-weight="400" fill="#475569" font-family="ui-sans-serif,system-ui,sans-serif">GPIO5 e GPIO15 sono pin di boot-strapping: alti al reset.</text>
+<rect x="24" y="348" width="452" height="190" rx="6" fill="#ffffff" stroke="#334155" stroke-width="1.5"/>
+<text x="34" y="367" font-size="13" font-weight="700" fill="#0f172a" font-family="ui-sans-serif,system-ui,sans-serif">CATENA 12 V</text>
+<rect x="38" y="372" width="150" height="74" rx="4" fill="#f1f5f9" stroke="#475569" stroke-width="1.5"/>
+<text x="44" y="387" font-size="11" text-anchor="start" font-weight="700" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">JP2</text>
+<text x="182" y="387" font-size="10" text-anchor="end" font-weight="400" fill="#475569" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">jumper 1×3</text>
+<rect x="43" y="396" width="13" height="12" rx="2" fill="#fde68a"/>
+<text x="49.5" y="405" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">1</text>
+<text x="62" y="406" font-size="10.5" text-anchor="start" font-weight="400" fill="#dc2626" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">+12V_RAW</text>
+<path d="M188,402 L200,402" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="43" y="412" width="13" height="12" rx="2" fill="#fde68a"/>
+<text x="49.5" y="421" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">2</text>
+<text x="62" y="422" font-size="10.5" text-anchor="start" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">uscita  →  F1</text>
+<path d="M188,418 L200,418" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="43" y="428" width="13" height="12" rx="2" fill="#fde68a"/>
+<text x="49.5" y="437" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">3</text>
+<text x="62" y="438" font-size="10.5" text-anchor="start" font-weight="400" fill="#dc2626" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">+12V_FILT</text>
+<path d="M188,434 L200,434" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<path d="M200,418 L236,418" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="236" y="410" width="46" height="16" fill="#fff" stroke="#1e293b" stroke-width="1.5" rx="2"/>
+<path d="M236,418 L282,418" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<text x="259" y="405" font-size="10" text-anchor="middle" font-weight="700" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">F1</text>
+<text x="259" y="444" font-size="10" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">500 mA F  PTF78</text>
+<path d="M282,418 L330,418" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<path d="M330,418 L462,418" fill="none" stroke="#dc2626" stroke-width="2.6"/>
+<rect x="328" y="402" width="42.0" height="15" rx="3" fill="#dc2626"/>
+<text x="335" y="413" font-size="10.5" text-anchor="start" font-weight="700" fill="#ffffff" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">+12V</text>
+<path d="M330,480 L462,480" fill="none" stroke="#334155" stroke-width="2.6"/>
+<rect x="328" y="464" width="34.5" height="15" rx="3" fill="#334155"/>
+<text x="335" y="475" font-size="10.5" text-anchor="start" font-weight="700" fill="#ffffff" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">GND</text>
+<path d="M300,418 L300,480" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<circle cx="300" cy="418" r="3" fill="#1e293b"/>
+<circle cx="300" cy="480" r="3" fill="#1e293b"/>
+<path d="M287,466 L313,466 L300,446 Z" fill="#fff" stroke="#1e293b" stroke-width="1.6"/>
+<path d="M287,446 L313,446" stroke="#1e293b" stroke-width="2.5"/>
+<text x="250" y="450" font-size="10" text-anchor="start" font-weight="700" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">D1</text>
+<text x="234" y="462" font-size="10" text-anchor="start" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">P6KE15A</text>
+<path d="M360,418 L360,446" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<circle cx="360" cy="418" r="3" fill="#1e293b"/>
+<path d="M347,449 L373,449" stroke="#1e293b" stroke-width="2.5"/>
+<path d="M347,458 A13,7 0 0 0 373,458" fill="none" stroke="#1e293b" stroke-width="2.5"/>
+<text x="341" y="445" font-size="12" text-anchor="start" font-weight="700" fill="#1e293b" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">+</text>
+<text x="379" y="451" font-size="10" text-anchor="start" font-weight="700" fill="#1e293b" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">C1</text>
+<text x="379" y="463" font-size="10" text-anchor="start" font-weight="400" fill="#1e293b" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">10µF/25V</text>
+<path d="M360,460 L360,480" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<circle cx="360" cy="480" r="3" fill="#1e293b"/>
+<path d="M415,418 L415,446" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<circle cx="415" cy="418" r="3" fill="#1e293b"/>
+<path d="M402,449 L428,449" stroke="#94a3b8" stroke-width="2.5"/>
+<path d="M402,457 L428,457" stroke="#94a3b8" stroke-width="2.5"/>
+<text x="434" y="451" font-size="10" text-anchor="start" font-weight="700" fill="#94a3b8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">C2</text>
+<text x="434" y="463" font-size="10" text-anchor="start" font-weight="400" fill="#94a3b8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">100nF</text>
+<path d="M415,460 L415,480" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<circle cx="415" cy="480" r="3" fill="#1e293b"/>
+<text x="38" y="500" font-size="10.5" text-anchor="start" font-weight="400" fill="#475569" font-family="ui-sans-serif,system-ui,sans-serif">Il ponticello sceglie quale 12 V alimenta la scheda: pin centrale = uscita.</text>
+<text x="38" y="518" font-size="10.5" text-anchor="start" font-weight="400" fill="#475569" font-family="ui-sans-serif,system-ui,sans-serif">Il TVS sta a valle del fusibile: se cede in corto, salta F1.</text>
+<rect x="24" y="552" width="452" height="234" rx="6" fill="#ffffff" stroke="#334155" stroke-width="1.5"/>
+<text x="34" y="571" font-size="13" font-weight="700" fill="#0f172a" font-family="ui-sans-serif,system-ui,sans-serif">RAIL LOGICA E USCITE GPIO DI SCORTA</text>
+<path d="M50,590 L200,590" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<path d="M200,590 L300,590" fill="none" stroke="#2563eb" stroke-width="2.6"/>
+<rect x="198" y="574" width="42.0" height="15" rx="3" fill="#2563eb"/>
+<text x="205" y="585" font-size="10.5" text-anchor="start" font-weight="700" fill="#ffffff" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">+3V3</text>
+<path d="M57,618 L83,618" stroke="#1e293b" stroke-width="2.5"/>
+<path d="M57,627 A13,7 0 0 0 83,627" fill="none" stroke="#1e293b" stroke-width="2.5"/>
+<text x="51" y="614" font-size="12" text-anchor="start" font-weight="700" fill="#1e293b" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">+</text>
+<text x="89" y="620" font-size="10" text-anchor="start" font-weight="700" fill="#1e293b" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">C3</text>
+<text x="89" y="632" font-size="10" text-anchor="start" font-weight="400" fill="#1e293b" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">10µF</text>
+<path d="M70,590 L70,615" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<circle cx="70" cy="590" r="3" fill="#1e293b"/>
+<path d="M70,629 L70,660" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<path d="M200,660 L300,660" fill="none" stroke="#334155" stroke-width="2.6"/>
+<rect x="198" y="644" width="34.5" height="15" rx="3" fill="#334155"/>
+<text x="205" y="655" font-size="10.5" text-anchor="start" font-weight="700" fill="#ffffff" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">GND</text>
+<path d="M70,660 L200,660" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<circle cx="70" cy="660" r="3" fill="#1e293b"/>
+<rect x="134" y="615" width="32" height="14" fill="#fff" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="150" y="610" font-size="10" text-anchor="middle" font-weight="700" fill="#94a3b8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">R1</text>
+<text x="150" y="644" font-size="10" text-anchor="middle" font-weight="400" fill="#94a3b8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">4k7</text>
+<rect x="214" y="615" width="32" height="14" fill="#fff" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="230" y="610" font-size="10" text-anchor="middle" font-weight="700" fill="#94a3b8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">R2</text>
+<text x="230" y="644" font-size="10" text-anchor="middle" font-weight="400" fill="#94a3b8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">4k7</text>
+<text x="300" y="618" font-size="10" text-anchor="start" font-weight="400" fill="#94a3b8" font-family="ui-sans-serif,system-ui,sans-serif">pull-up I²C — piazzole, non montati</text>
+<text x="300" y="634" font-size="10" text-anchor="start" font-weight="400" fill="#94a3b8" font-family="ui-sans-serif,system-ui,sans-serif">(già 3k3 sul Freezanz)</text>
+<rect x="38" y="676" width="200" height="74" rx="4" fill="#f1f5f9" stroke="#475569" stroke-width="1.5"/>
+<text x="44" y="691" font-size="11" text-anchor="start" font-weight="700" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">J8 · J9</text>
+<text x="232" y="691" font-size="10" text-anchor="end" font-weight="400" fill="#475569" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">XH 3p ×2 — come P1/P2</text>
+<rect x="43" y="700" width="13" height="12" rx="2" fill="#cbd5e1"/>
+<text x="49.5" y="709" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">1</text>
+<text x="62" y="710" font-size="10.5" text-anchor="start" font-weight="400" fill="#dc2626" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">+12V</text>
+<path d="M238,706 L250,706" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="43" y="716" width="13" height="12" rx="2" fill="#cbd5e1"/>
+<text x="49.5" y="725" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">2</text>
+<text x="62" y="726" font-size="10.5" text-anchor="start" font-weight="400" fill="#334155" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">GND</text>
+<path d="M238,722 L250,722" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="43" y="732" width="13" height="12" rx="2" fill="#cbd5e1"/>
+<text x="49.5" y="741" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">3</text>
+<text x="62" y="742" font-size="10.5" text-anchor="start" font-weight="400" fill="#7c3aed" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">GPIO5  /  GPIO15</text>
+<path d="M238,738 L250,738" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="314" y="699" width="32" height="14" fill="#fff" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="330" y="694" font-size="10" text-anchor="middle" font-weight="700" fill="#94a3b8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">R4·R5</text>
+<text x="330" y="728" font-size="10" text-anchor="middle" font-weight="400" fill="#94a3b8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">10k</text>
+<text x="300" y="748" font-size="10.5" text-anchor="start" font-weight="400" fill="#94a3b8" font-family="ui-sans-serif,system-ui,sans-serif">R4/R5 = pull-up di strapping, piazzole non montate:</text>
+<text x="300" y="764" font-size="10.5" text-anchor="start" font-weight="400" fill="#94a3b8" font-family="ui-sans-serif,system-ui,sans-serif">servono solo se ci colleghi qualcosa che tira a massa</text>
+<text x="38" y="764" font-size="10.5" text-anchor="start" font-weight="400" fill="#475569" font-family="ui-sans-serif,system-ui,sans-serif">Stesso schema di P1/P2 sul Freezanz.</text>
+<rect x="492" y="72" width="396" height="714" rx="6" fill="#ffffff" stroke="#334155" stroke-width="1.5"/>
+<text x="502" y="91" font-size="13" font-weight="700" fill="#0f172a" font-family="ui-sans-serif,system-ui,sans-serif">ZOCCOLO MODULO MCP23017 CJMCU   (0x20)</text>
+<rect x="508" y="98" width="180" height="186" rx="4" fill="#f1f5f9" stroke="#475569" stroke-width="1.5"/>
+<text x="514" y="113" font-size="11" text-anchor="start" font-weight="700" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">J3</text>
+<text x="682" y="113" font-size="10" text-anchor="end" font-weight="400" fill="#475569" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">socket 1×10 — fila SX</text>
+<rect x="513" y="122" width="13" height="12" rx="2" fill="#cbd5e1"/>
+<text x="519.5" y="131" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">1</text>
+<text x="532" y="132" font-size="10.5" text-anchor="start" font-weight="400" fill="#dc2626" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">A2   ADDR → GND</text>
+<path d="M688,128 L700,128" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="513" y="138" width="13" height="12" rx="2" fill="#cbd5e1"/>
+<text x="519.5" y="147" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">2</text>
+<text x="532" y="148" font-size="10.5" text-anchor="start" font-weight="400" fill="#dc2626" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">A1   ADDR → GND</text>
+<path d="M688,144 L700,144" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="513" y="154" width="13" height="12" rx="2" fill="#cbd5e1"/>
+<text x="519.5" y="163" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">3</text>
+<text x="532" y="164" font-size="10.5" text-anchor="start" font-weight="400" fill="#dc2626" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">A0   ADDR → GND</text>
+<path d="M688,160 L700,160" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="513" y="170" width="13" height="12" rx="2" fill="#cbd5e1"/>
+<text x="519.5" y="179" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">4</text>
+<text x="532" y="180" font-size="10.5" text-anchor="start" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">RESET</text>
+<path d="M688,176 L700,176" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="513" y="186" width="13" height="12" rx="2" fill="#cbd5e1"/>
+<text x="519.5" y="195" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">5</text>
+<text x="532" y="196" font-size="10.5" text-anchor="start" font-weight="400" fill="#94a3b8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">SO    n.c.</text>
+<path d="M688,192 L700,192" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="513" y="202" width="13" height="12" rx="2" fill="#cbd5e1"/>
+<text x="519.5" y="211" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">6</text>
+<text x="532" y="212" font-size="10.5" text-anchor="start" font-weight="400" fill="#94a3b8" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">CS    n.c.</text>
+<path d="M688,208 L700,208" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="513" y="218" width="13" height="12" rx="2" fill="#cbd5e1"/>
+<text x="519.5" y="227" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">7</text>
+<text x="532" y="228" font-size="10.5" text-anchor="start" font-weight="400" fill="#059669" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">SDA</text>
+<path d="M688,224 L700,224" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="513" y="234" width="13" height="12" rx="2" fill="#cbd5e1"/>
+<text x="519.5" y="243" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">8</text>
+<text x="532" y="244" font-size="10.5" text-anchor="start" font-weight="400" fill="#059669" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">SCL</text>
+<path d="M688,240 L700,240" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="513" y="250" width="13" height="12" rx="2" fill="#cbd5e1"/>
+<text x="519.5" y="259" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">9</text>
+<text x="532" y="260" font-size="10.5" text-anchor="start" font-weight="400" fill="#334155" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">GND</text>
+<path d="M688,256 L700,256" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="513" y="266" width="13" height="12" rx="2" fill="#cbd5e1"/>
+<text x="519.5" y="275" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">10</text>
+<text x="532" y="276" font-size="10.5" text-anchor="start" font-weight="400" fill="#2563eb" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">VCC = +3V3</text>
+<path d="M688,272 L700,272" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="704" y="169" width="32" height="14" fill="#fff" stroke="#1e293b" stroke-width="1.5"/>
+<text x="720" y="164" font-size="10" text-anchor="middle" font-weight="700" fill="#1e293b" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">R3</text>
+<text x="720" y="198" font-size="10" text-anchor="middle" font-weight="400" fill="#1e293b" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">10k</text>
+<path d="M736,176 L790,176" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<text x="796" y="180" font-size="10.5" text-anchor="start" font-weight="700" fill="#2563eb" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">+3V3</text>
+<text x="508" y="304" font-size="11" text-anchor="start" font-weight="700" fill="#b91c1c" font-family="ui-sans-serif,system-ui,sans-serif">A2/A1/A0 = selezione INDIRIZZO, non GPIO</text>
+<text x="508" y="320" font-size="11" text-anchor="start" font-weight="400" fill="#b91c1c" font-family="ui-sans-serif,system-ui,sans-serif">tutti a massa → 0x20</text>
+<rect x="508" y="380" width="364" height="278" rx="4" fill="#f1f5f9" stroke="#475569" stroke-width="1.5"/>
+<text x="514" y="396" font-size="11" text-anchor="start" font-weight="700" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">J4</text>
+<text x="866" y="396" font-size="10" text-anchor="end" font-weight="400" fill="#475569" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">socket 2×10 — fila DX</text>
+<text x="604" y="414" font-size="10" text-anchor="middle" font-weight="700" fill="#059669" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">ESTERNA = porta A</text>
+<text x="778" y="414" font-size="10" text-anchor="middle" font-weight="700" fill="#7c3aed" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">INTERNA = porta B</text>
+<rect x="524" y="427" width="15" height="14" rx="2" fill="#a7f3d0"/>
+<text x="531.5" y="438" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">1</text>
+<text x="546" y="438" font-size="10.5" text-anchor="start" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">GND</text>
+<rect x="726" y="427" width="15" height="14" rx="2" fill="#ddd6fe"/>
+<text x="733.5" y="438" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">2</text>
+<text x="748" y="438" font-size="10.5" text-anchor="start" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">VCC</text>
+<rect x="524" y="449" width="15" height="14" rx="2" fill="#a7f3d0"/>
+<text x="531.5" y="460" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">3</text>
+<text x="546" y="460" font-size="10.5" text-anchor="start" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">INTA</text>
+<rect x="726" y="449" width="15" height="14" rx="2" fill="#ddd6fe"/>
+<text x="733.5" y="460" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">4</text>
+<text x="748" y="460" font-size="10.5" text-anchor="start" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">INTB</text>
+<rect x="524" y="471" width="15" height="14" rx="2" fill="#a7f3d0"/>
+<text x="531.5" y="482" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">5</text>
+<text x="546" y="482" font-size="10.5" text-anchor="start" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">A0 → IO1</text>
+<rect x="726" y="471" width="15" height="14" rx="2" fill="#ddd6fe"/>
+<text x="733.5" y="482" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">6</text>
+<text x="748" y="482" font-size="10.5" text-anchor="start" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">B0</text>
+<rect x="524" y="493" width="15" height="14" rx="2" fill="#a7f3d0"/>
+<text x="531.5" y="504" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">7</text>
+<text x="546" y="504" font-size="10.5" text-anchor="start" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">A1 → IO2</text>
+<rect x="726" y="493" width="15" height="14" rx="2" fill="#ddd6fe"/>
+<text x="733.5" y="504" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">8</text>
+<text x="748" y="504" font-size="10.5" text-anchor="start" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">B1</text>
+<rect x="524" y="515" width="15" height="14" rx="2" fill="#a7f3d0"/>
+<text x="531.5" y="526" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">9</text>
+<text x="546" y="526" font-size="10.5" text-anchor="start" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">A2 → IO3</text>
+<rect x="726" y="515" width="15" height="14" rx="2" fill="#ddd6fe"/>
+<text x="733.5" y="526" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">10</text>
+<text x="748" y="526" font-size="10.5" text-anchor="start" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">B2</text>
+<rect x="524" y="537" width="15" height="14" rx="2" fill="#a7f3d0"/>
+<text x="531.5" y="548" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">11</text>
+<text x="546" y="548" font-size="10.5" text-anchor="start" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">A3 → IO4</text>
+<rect x="726" y="537" width="15" height="14" rx="2" fill="#ddd6fe"/>
+<text x="733.5" y="548" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">12</text>
+<text x="748" y="548" font-size="10.5" text-anchor="start" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">B3</text>
+<rect x="524" y="559" width="15" height="14" rx="2" fill="#a7f3d0"/>
+<text x="531.5" y="570" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">13</text>
+<text x="546" y="570" font-size="10.5" text-anchor="start" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">A4 → IO5</text>
+<rect x="726" y="559" width="15" height="14" rx="2" fill="#ddd6fe"/>
+<text x="733.5" y="570" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">14</text>
+<text x="748" y="570" font-size="10.5" text-anchor="start" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">B4</text>
+<rect x="524" y="581" width="15" height="14" rx="2" fill="#a7f3d0"/>
+<text x="531.5" y="592" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">15</text>
+<text x="546" y="592" font-size="10.5" text-anchor="start" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">A5 → IO6</text>
+<rect x="726" y="581" width="15" height="14" rx="2" fill="#ddd6fe"/>
+<text x="733.5" y="592" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">16</text>
+<text x="748" y="592" font-size="10.5" text-anchor="start" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">B5</text>
+<rect x="524" y="603" width="15" height="14" rx="2" fill="#a7f3d0"/>
+<text x="531.5" y="614" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">17</text>
+<text x="546" y="614" font-size="10.5" text-anchor="start" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">A6 → IO7</text>
+<rect x="726" y="603" width="15" height="14" rx="2" fill="#ddd6fe"/>
+<text x="733.5" y="614" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">18</text>
+<text x="748" y="614" font-size="10.5" text-anchor="start" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">B6</text>
+<rect x="524" y="625" width="15" height="14" rx="2" fill="#a7f3d0"/>
+<text x="531.5" y="636" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">19</text>
+<text x="546" y="636" font-size="10.5" text-anchor="start" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">A7 → IO8</text>
+<rect x="726" y="625" width="15" height="14" rx="2" fill="#ddd6fe"/>
+<text x="733.5" y="636" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">20</text>
+<text x="748" y="636" font-size="10.5" text-anchor="start" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">B7</text>
+<text x="508" y="680" font-size="10.5" text-anchor="start" font-weight="700" fill="#b91c1c" font-family="ui-sans-serif,system-ui,sans-serif">In KiCad ruota J4 così che il pin 1 cada sul lato lontano da J3.</text>
+<rect x="904" y="72" width="372" height="372" rx="6" fill="#ffffff" stroke="#334155" stroke-width="1.5"/>
+<text x="914" y="91" font-size="13" font-weight="700" fill="#0f172a" font-family="ui-sans-serif,system-ui,sans-serif">CANALE SENSORE ×8   (S1…S8)</text>
+<rect x="918" y="98" width="140" height="90" rx="4" fill="#f1f5f9" stroke="#475569" stroke-width="1.5"/>
+<text x="924" y="113" font-size="11" text-anchor="start" font-weight="700" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">J11…J18</text>
+<text x="1052" y="113" font-size="10" text-anchor="end" font-weight="400" fill="#475569" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">XH 4p</text>
+<rect x="923" y="122" width="13" height="12" rx="2" fill="#cbd5e1"/>
+<text x="929.5" y="131" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">1</text>
+<text x="942" y="132" font-size="10.5" text-anchor="start" font-weight="400" fill="#7c3aed" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">M      nero</text>
+<path d="M1058,128 L1070,128" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="923" y="138" width="13" height="12" rx="2" fill="#cbd5e1"/>
+<text x="929.5" y="147" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">2</text>
+<text x="942" y="148" font-size="10.5" text-anchor="start" font-weight="400" fill="#334155" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">GND    blu</text>
+<path d="M1058,144 L1070,144" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="923" y="154" width="13" height="12" rx="2" fill="#cbd5e1"/>
+<text x="929.5" y="163" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">3</text>
+<text x="942" y="164" font-size="10.5" text-anchor="start" font-weight="400" fill="#059669" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">SIG    giallo</text>
+<path d="M1058,160 L1070,160" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="923" y="170" width="13" height="12" rx="2" fill="#cbd5e1"/>
+<text x="929.5" y="179" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">4</text>
+<text x="942" y="180" font-size="10.5" text-anchor="start" font-weight="400" fill="#dc2626" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">+12V   marrone</text>
+<path d="M1058,176 L1070,176" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<path d="M1070,128 L1180,128" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<text x="1186" y="132" font-size="10.5" text-anchor="start" font-weight="700" fill="#7c3aed" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">SENS_M</text>
+<path d="M1070,160 L1084,160" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="1084" y="153" width="32" height="14" fill="#fff" stroke="#1e293b" stroke-width="1.5"/>
+<text x="1100" y="148" font-size="10" text-anchor="middle" font-weight="700" fill="#1e293b" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">R11…R18</text>
+<text x="1100" y="182" font-size="10" text-anchor="middle" font-weight="400" fill="#1e293b" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">470R</text>
+<path d="M1116,160 L1180,160" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<circle cx="1180" cy="160" r="3" fill="#1e293b"/>
+<path d="M1180,160 L1230,160" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<text x="1236" y="164" font-size="11" text-anchor="start" font-weight="700" fill="#059669" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">IOn</text>
+<path d="M1180,160 L1180,116" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="1173" y="84" width="14" height="32" fill="#fff" stroke="#1e293b" stroke-width="1.5"/>
+<text x="1192" y="97" font-size="10" text-anchor="start" font-weight="700" fill="#1e293b" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">R21…R28</text>
+<text x="1192" y="110" font-size="10" text-anchor="start" font-weight="400" fill="#1e293b" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">10k</text>
+<path d="M1180,84 L1180,68" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<text x="1180" y="62" font-size="10.5" text-anchor="middle" font-weight="700" fill="#2563eb" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">+3V3</text>
+<text x="918" y="246" font-size="11" text-anchor="start" font-weight="700" fill="#7c3aed" font-family="ui-sans-serif,system-ui,sans-serif">M = mode select, tutti e 8 in comune su JP1:</text>
+<text x="918" y="262" font-size="11" text-anchor="start" font-weight="400" fill="#334155" font-family="ui-sans-serif,system-ui,sans-serif">aperto = uscita normale (come adesso),</text>
+<text x="918" y="278" font-size="11" text-anchor="start" font-weight="400" fill="#334155" font-family="ui-sans-serif,system-ui,sans-serif">chiuso a GND = tutte e otto invertite.</text>
+<text x="918" y="306" font-size="11" text-anchor="start" font-weight="700" fill="#b91c1c" font-family="ui-sans-serif,system-ui,sans-serif">470R in serie = la protezione che mancava.</text>
+<text x="918" y="322" font-size="11" text-anchor="start" font-weight="400" fill="#334155" font-family="ui-sans-serif,system-ui,sans-serif">Se il giallo becca i 12 V la corrente nel pin MCP</text>
+<text x="918" y="338" font-size="11" text-anchor="start" font-weight="400" fill="#334155" font-family="ui-sans-serif,system-ui,sans-serif">resta sotto i 20 mA invece di bruciarlo.</text>
+<text x="918" y="366" font-size="11" text-anchor="start" font-weight="400" fill="#334155" font-family="ui-sans-serif,system-ui,sans-serif">In esercizio è invisibile: bagnato il pin sta a 0.35 V,</text>
+<text x="918" y="382" font-size="11" text-anchor="start" font-weight="400" fill="#334155" font-family="ui-sans-serif,system-ui,sans-serif">contro un V_IL di 0.66 V.</text>
+<text x="918" y="410" font-size="11" text-anchor="start" font-weight="400" fill="#334155" font-family="ui-sans-serif,system-ui,sans-serif">I 10 k sono i tuoi, spostati sul lato MCP.</text>
+<rect x="904" y="460" width="372" height="326" rx="6" fill="#ffffff" stroke="#334155" stroke-width="1.5"/>
+<text x="914" y="479" font-size="13" font-weight="700" fill="#0f172a" font-family="ui-sans-serif,system-ui,sans-serif">USCITE AUSILIARIE</text>
+<rect x="918" y="484" width="170" height="90" rx="4" fill="#f1f5f9" stroke="#475569" stroke-width="1.5"/>
+<text x="924" y="499" font-size="11" text-anchor="start" font-weight="700" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">J21·J22·J23</text>
+<text x="1082" y="499" font-size="10" text-anchor="end" font-weight="400" fill="#475569" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">XH 4p ×3 — I²C EXP</text>
+<rect x="923" y="508" width="13" height="12" rx="2" fill="#cbd5e1"/>
+<text x="929.5" y="517" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">1</text>
+<text x="942" y="518" font-size="10.5" text-anchor="start" font-weight="400" fill="#2563eb" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">+3V3</text>
+<path d="M1088,514 L1100,514" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="923" y="524" width="13" height="12" rx="2" fill="#cbd5e1"/>
+<text x="929.5" y="533" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">2</text>
+<text x="942" y="534" font-size="10.5" text-anchor="start" font-weight="400" fill="#334155" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">GND</text>
+<path d="M1088,530 L1100,530" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="923" y="540" width="13" height="12" rx="2" fill="#cbd5e1"/>
+<text x="929.5" y="549" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">3</text>
+<text x="942" y="550" font-size="10.5" text-anchor="start" font-weight="400" fill="#059669" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">SDA</text>
+<path d="M1088,546 L1100,546" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="923" y="556" width="13" height="12" rx="2" fill="#cbd5e1"/>
+<text x="929.5" y="565" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">4</text>
+<text x="942" y="566" font-size="10.5" text-anchor="start" font-weight="400" fill="#059669" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">SCL</text>
+<path d="M1088,562 L1100,562" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="918" y="590" width="320" height="74" rx="4" fill="#f1f5f9" stroke="#475569" stroke-width="1.5"/>
+<text x="924" y="605" font-size="11" text-anchor="start" font-weight="700" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">J6 · J7 · JP1</text>
+<text x="1232" y="605" font-size="10" text-anchor="end" font-weight="400" fill="#475569" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">header</text>
+<rect x="923" y="614" width="13" height="12" rx="2" fill="#cbd5e1"/>
+<text x="929.5" y="623" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">1</text>
+<text x="942" y="624" font-size="10.5" text-anchor="start" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">GPB0…GPB7 + GND + 3V3   (1×10)</text>
+<path d="M1238,620 L1250,620" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="923" y="630" width="13" height="12" rx="2" fill="#cbd5e1"/>
+<text x="929.5" y="639" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">2</text>
+<text x="942" y="640" font-size="10.5" text-anchor="start" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">INTA, INTB, GND, 3V3, SDA, SCL  (1×6)</text>
+<path d="M1238,636 L1250,636" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<rect x="923" y="646" width="13" height="12" rx="2" fill="#cbd5e1"/>
+<text x="929.5" y="655" font-size="9" text-anchor="middle" font-weight="400" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">3</text>
+<text x="942" y="656" font-size="10.5" text-anchor="start" font-weight="400" fill="#7c3aed" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">SENS_M → GND   (1×2, aperto)</text>
+<path d="M1238,652 L1250,652" fill="none" stroke="#1e293b" stroke-width="1.4"/>
+<text x="918" y="700" font-size="11" text-anchor="start" font-weight="400" fill="#334155" font-family="ui-sans-serif,system-ui,sans-serif">Sulle porte I²C c'è solo la 3.3 V, niente 12 V.</text>
+<text x="918" y="724" font-size="11" text-anchor="start" font-weight="400" fill="#334155" font-family="ui-sans-serif,system-ui,sans-serif">Porta B tutta libera: 8 GPIO di scorta senza rifare la scheda.</text>
+<text x="918" y="748" font-size="11" text-anchor="start" font-weight="400" fill="#334155" font-family="ui-sans-serif,system-ui,sans-serif">Gli interrupt eviterebbero il polling ogni 500 ms — pin già</text>
+<text x="918" y="764" font-size="11" text-anchor="start" font-weight="400" fill="#334155" font-family="ui-sans-serif,system-ui,sans-serif">disponibili sul modulo, li usi quando vuoi.</text>
+<rect x="24" y="802" width="1252" height="210" rx="6" fill="#ffffff" stroke="#334155" stroke-width="1.5"/>
+<text x="34" y="821" font-size="13" font-weight="700" fill="#0f172a" font-family="ui-sans-serif,system-ui,sans-serif">RIEPILOGO MODIFICHE  rev A</text>
+<text x="40" y="830" font-size="11" text-anchor="start" font-weight="700" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">Ingresso</text>
+<text x="140" y="830" font-size="11" text-anchor="start" font-weight="400" fill="#475569" font-family="ui-sans-serif,system-ui,sans-serif">un solo IDC 2×4, prolunga 1:1 dal J3 — spariti i due connettori separati 12 V / I²C</text>
+<text x="40" y="852" font-size="11" text-anchor="start" font-weight="700" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">JP2</text>
+<text x="140" y="852" font-size="11" text-anchor="start" font-weight="400" fill="#475569" font-family="ui-sans-serif,system-ui,sans-serif">ponticello 3 pin fra +12V_RAW e +12V_FILT, uscita al centro — da decidere dopo la verifica</text>
+<text x="40" y="874" font-size="11" text-anchor="start" font-weight="700" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">J8 · J9</text>
+<text x="140" y="874" font-size="11" text-anchor="start" font-weight="400" fill="#475569" font-family="ui-sans-serif,system-ui,sans-serif">GPIO5 e GPIO15 portati fuori su XH 3p con lo stesso pinout di P1/P2. Restano scollegati</text>
+<text x="40" y="896" font-size="11" text-anchor="start" font-weight="700" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">F1</text>
+<text x="140" y="896" font-size="11" text-anchor="start" font-weight="400" fill="#475569" font-family="ui-sans-serif,system-ui,sans-serif">500 mA rapido, portafusibile Stelvio-Kontek PTF78 orizzontale aperto</text>
+<text x="40" y="918" font-size="11" text-anchor="start" font-weight="700" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">C2</text>
+<text x="140" y="918" font-size="11" text-anchor="start" font-weight="400" fill="#475569" font-family="ui-sans-serif,system-ui,sans-serif">piazzola presente, non popolata — i sensori commutano di rado</text>
+<text x="40" y="940" font-size="11" text-anchor="start" font-weight="700" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">Sensori</text>
+<text x="140" y="940" font-size="11" text-anchor="start" font-weight="400" fill="#475569" font-family="ui-sans-serif,system-ui,sans-serif">XH 4 poli: 1 nero/M, 2 blu/GND, 3 giallo/SIG, 4 marrone/12V. Due file sfalsate da 4</text>
+<text x="40" y="962" font-size="11" text-anchor="start" font-weight="700" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">Zoccolo</text>
+<text x="140" y="962" font-size="11" text-anchor="start" font-weight="400" fill="#475569" font-family="ui-sans-serif,system-ui,sans-serif">20.32 mm fra fila SX e fila DX esterna (9 piazzole incluse), interna a 17.78</text>
+<text x="40" y="984" font-size="11" text-anchor="start" font-weight="700" fill="#0f172a" font-family="ui-monospace,SFMono-Regular,Menlo,monospace">Indirizzo</text>
+<text x="140" y="984" font-size="11" text-anchor="start" font-weight="400" fill="#475569" font-family="ui-sans-serif,system-ui,sans-serif">A2/A1/A0 a massa, 0x20 fisso — niente header di selezione</text>
+</svg>
