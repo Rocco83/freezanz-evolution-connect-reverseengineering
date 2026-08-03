@@ -4,3 +4,56 @@
 .esphome/
 secrets.yaml
 .platformio/
+# gemini generated
+# macOS specific temporary and system files
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# KiCad specific temporary, cache, and backup files
+# Backups
+*-backups/
+*.bck
+*.kicad_pcb-bak
+*.kicad_sch-bak
+*.sch-bak
+*-save.pro
+*-save.kicad_prl
+*-save.kicad_pcb
+
+# Autosave files
+_autosave-*
+
+# Lock files
+*.lck
+.~*.lck
+
+# Cache files
+fp-info-cache
+
+# Netlist files
+*.net
+
+# Plot, Gerber, and BOM directories/files (uncomment if you generate them inside the repo)
+# gerber/
+# gerbers/
+# plots/
+# production/
+# *.gbr
+# *.drl
+# *.pos
+# *.csv
