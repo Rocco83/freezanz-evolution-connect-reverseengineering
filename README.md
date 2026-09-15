@@ -1,264 +1,559 @@
-# Freezanz level I/O board — rev A
+# Freezanz **Zhalt Evolution Connect** — Reverse‑Engineering README
 
-Interface board for eight XKC-Y25-NPN capacitive level sensors, with the CJMCU
-MCP23017 module on a socket so it stays swappable. Everything is through-hole:
-the only thing needed from the fab house is the bare PCB.
+# Attenzione: questo README è stato creato con IA varie e contiene degli errori, sopratutto tutti i voltaggi sono da verificare. Non è sicuro affidarsi a questo progetto, sopratutto per la parte elettrica.
 
-- Board cut: **90 × 50 mm** (enclosure is 95 × 55, so there is margin all round)
-- 2 layers, 1.6 mm
-- 46 parts to fit, 5 optional footprints left unpopulated
+## Avvertenza legale
 
-## Files
+*Documento redatto esclusivamente a fini di studio, analisi tecnica e interoperabilità (art. 5 DLGS 518/92). L’autore declina ogni responsabilità per usi impropri o violazioni di licenze/marchi.*
 
-| File | Contents |
-|---|---|
-| `freezanz-level-io.kicad_pro` | project — net classes Default 0.3 mm / Power 0.8 mm |
-| `freezanz-level-io.kicad_sch` | full schematic, footprints already assigned |
-| `freezanz-level-io.kicad_pcb` | board outline only, 90 × 50 on Edge.Cuts |
-| `schema-rev-a.svg` | readable schematic, for review without KiCad |
-| `gen_kicad.py`, `make_pcb.py` | generators — edit and re-run to rebuild |
+---
 
-## Getting started
+## Scopo del documento
 
-Nothing in this project contains invented geometry. Symbols and footprints are
-referenced by their standard KiCad library names and resolve against your own
-installation:
+Raccogliere e mantenere una descrizione completa di **pin‑out**, **connettori** e **I/O** della scheda elettronica **Zhalt Evolution Connect** per lo sviluppo di firmware/software alternativi.
 
-1. **Eeschema** → `Tools → Update Symbols from Library`, select all. The cached
-   symbol graphics are replaced by the real ones. Pin coordinates in the file
-   already match the KiCad 10 library exactly, so no connection is lost.
-2. **PCB editor** → `Tools → Update PCB from Schematic` (F8). All 51 footprints
-   are imported from your libraries, stacked at the origin, ready to place.
-3. Place and route. The board file carries only the outline.
+---
 
-No ground pour is defined. GND is the largest net (35 connections), so routing
-it by hand is real work — a pour on B.Cu would absorb most of it, but that is
-your call.
+## Stato del lavoro
 
-## MCP23017 module socket (CJMCU)
+| Versione | Data (EU/Rome) | Autore               | Note brevi                                                                   |
+| -------- | -------------- | -------------------- | ---------------------------------------------------------------------------- |
+| 0.5      | 2025‑05‑13     | ChatGPT + Rocco83    | Sostituita tabella pin‑out ESP32 con layout basato su LastMinuteEngineer + mapping Freezanz |
+| 0.6      | 2026‑03‑12     | Rocco83 + Claude     | Mappatura completa J3 (I2C expansion), J8 (LED ext), P2 (sensor input), correzione P1 |
 
-Two 2.54 mm rows on the right, one on the left. Measured: 9 pad positions
-inclusive from the left row to the outer right row, so **20.32 mm** left-to-outer
-and 17.78 mm left-to-inner.
 
-| | inner right column | outer right column |
-|---|---|---|
-| 1 | VCC | GND |
-| 2 | INTB | INTA |
-| 3 | GPB0 | **GPA0 → IO1** |
-| 4 | GPB1 | **GPA1 → IO2** |
-| 5 | GPB2 | **GPA2 → IO3** |
-| 6 | GPB3 | **GPA3 → IO4** |
-| 7 | GPB4 | **GPA4 → IO5** |
-| 8 | GPB5 | **GPA5 → IO6** |
-| 9 | GPB6 | **GPA6 → IO7** |
-| 10 | GPB7 | **GPA7 → IO8** |
+---
 
-Port A, the outer column, carries the level sensors. `J4` is a 2×10 with
-odd/even numbering, so **odd pins are the outer column**: when placing it, keep
-pin 1 on the side away from `J3`, and rotate it so pin 1 ends up at the top —
-that makes the board read the same way up as the module silkscreen.
+## Materiale di riferimento
 
-Left row `J3`: `A2 A1 A0 RESET SO CS SDA SCL GND VCC`. Pins 5 and 6 are SPI-only
-and stay unconnected.
+* Foto PCB fronte/retro (repository)
+* **Datasheet ESP32‑WROOM‑32E** (Espressif)
+* Articolo di riferimento pin‑out: "ESP32‑WROOM‑32 Pinout" — LastMinuteEngineers 🎓
+* Manuale d’uso Freezanz (in attesa)
+* Foto prodotto: ![Zhalt Evolution Connect](https://www.emporiodiantonio.com/cdn/shop/products/zhaltevolutionconnect_1024x1024@2x.jpg)
 
-**A2/A1/A0 on the left row are the I²C hardware address inputs, not GPIO.** They
-share names with the port A pins on the right row, which is confusing, but they
-are unrelated pins. All three are tied straight to GND, setting the address to
-0x20.
+---
 
-## Input — one IDC connector
+## Riepilogo connettori esterni
+| Rif.            | Tipo / passo           | Pin ↓                        | Segnale         | Tensione       | Descrizione |
+|-----------------|------------------------|------------------------------|-----------------|----------------|-------|
+| **J1 (DC_IN)**  | Jack barrel (diameter TBD) | Tip = **V+**, Sleeve = GND | TBD (12 V ?)    | Ingresso alimentazione continua; negativo a massa, positivo protetto da **D1** e instradato al bus **P+** e **B+**, oltre a P1 via **H6** |
+| **PUMP**        | Fast-on 2 p            | **PUMP P (P+) / PUMP N (P-)**   | 12 VCC | Rele` pompa nebulizzatore usa la stessa VCC del jack J1, GND mediato da IO27 (da confermare) |
+| **BATT**        | Fast-on 2 p            | **BATT P (B+)  / BATT N (B-)**  | 12 VCC | Backup battery (condensatore 16V 68000 uF); **B+** è solidale alla rail **P+** |
+| **P1**          | JST-XH 3 p             | 1 = **P+ (12V via H6)**, 2 = GND, 3 = sensor input → R71 (38KΩ) → R107 (0Ω) → GPIO5 | 12V / 0-3.3V | Sensore dry contact: aperto = HIGH su GPIO5, chiuso a GND = LOW. 38KΩ protegge GPIO5 da tensioni >3.3V |
+| **J3**          | Pin header 2×4 (NP)    | vedi sezione dedicata        | 3.3V / I2C      | Porta espansione I2C + GPIO. Non collegata di serie. |
+| **J8 (LED_EXT)**| JST-XH 5 p (NP)        | vedi sezione dedicata        | 12V             | Connettore LED esterni. Non collegato di serie. |
+| **P2**          | JST-XH 3 p (NP)        | 1 = 12V, 2 = GND, 3 = sensor input → R67 (38KΩ) → R106 (0Ω) → GPIO15 | 12V / 0-3.3V | Secondo ingresso sensore dry contact, stesso schema di P1. Non collegato di serie. |
 
-A single 2×4 IDC header, extended 1:1 by ribbon cable from the `J3` expansion
-header on the Freezanz board. Pinout per the reverse-engineering README rev 0.6;
-IDC zig-zag numbering, odd pins on one row, even on the other.
 
-| Pin | Net | Path on the Freezanz board |
-|---|---|---|
-| 1 | `+12V_RAW` | straight off rail P+ |
-| 2 | `+12V_FILT` | through a 0.2 Ω sense/jumper resistor |
-| 3 | `+3V3` | straight off the ESP32 3.3 V pin |
-| 4 | `GND` | — |
-| 5 | `SDA` | GPIO21 through R65, 120 Ω |
-| 6 | `GPIO5` | through R36, 470 Ω — shared with the P1 sensor input |
-| 7 | `SCL` | GPIO22 through R66, 120 Ω |
-| 8 | `GPIO15` | through R89, 470 Ω — boot-strapping pin |
+### Silkscreen power rail labels (bottom edge)
+| Label serigrafia | Rail / Signal                                                                       |
+|------------------|-------------------------------------------------------------------------------------|
+| **P+**           | “PUMP P” – Positive supply rail (shared with **B+** and **J1 V+**)                   |
+| **P-**           | “PUMP N” – Return/ground for pump                                                   |
+| **B+**           | “BATT P” – Battery positive (internally tied to **P+**)                             |
+| **B-**           | “BATT N” – Battery negative                                                         |
 
-SDA and SCL already carry 120 Ω in series and 3.3 kΩ pull-ups (R452/R455,
-enabled by powering pin 3) on the Freezanz side, which is why R1/R2 here stay
-unpopulated. GPIO5 and GPIO15 are ESP32 strapping pins that must sit HIGH at
-reset, so anything connected to `J8`/`J9` must not hold them low during boot.
 
-`JP2` selects which 12 V feeds the board, centre pin as the output. The 0.2 Ω is
-almost certainly a sense shunt rather than a filter, so do not parallel the two
-rails; the jumper keeps both options open until that is confirmed.
 
-## Sensor channel (×8)
+## Connettore **J3** — Header espansione I2C + GPIO
 
-XKC-Y25-NPN, 4-pin flat connector:
+J3 è un pin header 2×4 (8 pin totali) non popolato di serie. Espone il bus I2C
+dell'ESP32 con pull-up dedicati, alimentazione e due GPIO aggiuntivi.
+Progettato per collegare moduli I2C esterni (display, sensori) o periferiche digitali.
 
-| Pin | Wire | Net |
-|---|---|---|
-| 1 | black | `SENS_M` — mode select |
-| 2 | blue | GND |
-| 3 | yellow | signal out |
-| 4 | brown | +12V |
+| Pin J3 | Segnale         | Percorso                                      | Note |
+|--------|-----------------|-----------------------------------------------|------|
+| 1      | VCC / BATT+     | Diretta dalla rail P+                         | Alimentazione 12V |
+| 2      | VCC filtrato    | Via resistenza 0.2Ω (jumper/sense)            | VCC con lieve filtraggio |
+| 3      | VCC 3.3v        | Diretta da pin 3.3v ESP32                     | VCC per i2c esterno |
+| 4      | GND             | —                                             | Riferimento comune |
+| 5      | SDA (GPIO21)    | Via R65 (120Ω)                                | I2C Data |
+| 6      | GPIO5           | Via R36 (470Ω)                                | Condiviso con P1 pin 3 (sensore acqua) |
+| 7      | SCL (GPIO22)    | Via R66 (120Ω)                                | I2C Clock |
+| 8      | GPIO15          | Via R89 (470Ω) → R106 (0Ω)                   | GPIO generico. Boot-strapping: deve essere HIGH al reset |
 
+### Note I2C su J3
+
+- I pull-up interni alla board su SCL/SDA sono già presenti (R452, R455 da 3K3
+  collegate a VCC tramite pin 3).
+- Per usare il bus I2C su J3: collegare VCC a pin 1 o 2, GND a pin 4,
+  SDA a pin 5, SCL a pin 7. Alimentare pin 3 per attivare i pull-up.
+- GPIO5 (pin 6) è condiviso con il sensore acqua su P1: non usare
+  contemporaneamente P1 e J3 pin 6 per segnali distinti.
+- GPIO15 (pin 8) è un boot-strapping pin: deve essere HIGH al boot.
+  La resistenza R89 da 470Ω protegge il GPIO ma non sostituisce un pull-up
+  esterno se il dispositivo collegato potrebbe portare la linea a GND durante il boot.
+
+---
+
+## Connettore **J8** — LED esterni
+
+J8 è un pin header da 5 pin non popolato di serie. Espone i segnali dei tre
+LED di stato della board (D7 bicolore e D3) verso l'esterno, permettendo
+di collegare LED remoti su pannello frontale o indicatori visivi in posizione
+accessibile. Le resistenze di limitazione corrente sono già presenti sulla board.
+
+| Pin J8 | Segnale           | Percorso            | Note |
+|--------|-------------------|---------------------|------|
+| 1      | 12V (anodo comune)| Rail P+             | Alimentazione LED |
+| 2      | Catodo D7 Rosso   | Via ~500Ω           | LED rosso = allarme |
+| 3      | Catodo D7 Verde   | Via ~500Ω           | LED verde = pronto |
+| 4      | Catodo D3         | Via ~400Ω           | LED stato (blu sulla board) |
+| 5      | GND               | —                   | Riferimento |
+
+### Note J8
+
+- Le resistenze di dropping sono già sulla board: collegare LED esterni
+  direttamente senza aggiungere resistenze aggiuntive.
+- Corrente LED stimata con 12V: (12 - Vf) / R ≈ 20-25mA per LED standard.
+- I LED interni D7 e D3 rimangono attivi in parallelo con quelli esterni.
+
+---
+
+## Connettore **P2** — Secondo ingresso sensore
+
+P2 è un connettore JST-XH 3 pin non collegato di serie. Ha lo stesso schema
+elettrico di P1: permette di collegare un sensore dry contact a 12V il cui
+stato viene letto da GPIO15 dell'ESP32.
+
+| Pin P2 | Segnale    | Percorso                              | Note |
+|--------|------------|---------------------------------------|------|
+| 1      | 12V        | Rail P+                               | Alimentazione/riferimento sensore |
+| 2      | GND        | —                                     | Riferimento comune |
+| 3      | Sensor in  | → R67 (38KΩ) → R106 (0Ω) → GPIO15    | Input dry contact |
+
+### Schema di funzionamento P2
+
+Identico a P1: il sensore è un contatto pulito (dry contact) che va a GND
+quando attivo. La resistenza R67 da 38KΩ protegge GPIO15 da tensioni superiori
+a 3.3V. R103 è un footprint alternativo non popolato.
+
+- **Contatto aperto** (sensore non attivo): GPIO15 = HIGH
+- **Contatto chiuso a GND** (sensore attivo): GPIO15 = LOW
+
+GPIO15 è un boot-strapping pin (deve essere HIGH al boot): verificare che
+il sensore collegato non porti la linea a GND durante l'accensione.
+
+---
+
+## IC29 — identification
+
+**Package**: MCP7940M Low-Cost I2 C™ Real-Time Clock/Calendar with SRAM
+The routing of **GPIO21 / GPIO22** (I²C) go to the **IC29 is an I²C real‑time clock (RTC)**
+
+### Associated timing element
+
+| Ref‑des | Mark code  | Type                           | Connection                                                        |
+| ------- | ---------- | ------------------------------ | ----------------------------------------------------------------- |
+| **Y2**  | “32 C 040” | 32.768 kHz tuning‑fork crystal | Pins X1/X2 of IC29 (through short tracks) — provides RTC timebase |
+
+This has been confirmed
 ```
-          +3V3
-            |
-          [10k]  R21..R28
-            |
-XH 4p       |          MCP23017
- 1 M -------|--------- SENS_M --- JP1 --- GND
- 2 GND      |
- 3 SIG -[470R]----------.-------- GPA0..GPA7
-        R11..R18
- 4 +12V
-```
-
-- **470R in series** is the protection that was missing. If the yellow wire ever
-  sees 12 V, current into the MCP pin stays under 20 mA instead of destroying it.
-  With the sensor's NPN conducting the pin sits around 0.35 V, comfortably inside
-  the MCP23017 V_IL of 0.66 V.
-- **10k to 3V3** is the pull-up, on the MCP side of the series resistor. The
-  sensor output is open-collector, so without it the line floats when dry.
-- **`SENS_M`** ties all eight mode pins together. `JP1` open (default) leaves the
-  sensors in normal output mode; fitting the jumper pulls all eight to GND and
-  inverts every output at once, with no rewiring.
-
-## Power
-
-```
-J1.1 +12V_RAW  --+
-                 |-- JP2 --> F1 --> +12V --+-- D1 P6KE15A --> GND
-J1.2 +12V_FILT --+                         +-- C1 10uF (+ C2 pad, not fitted)
-                                           +-- 8x sensor connectors
-                                           +-- J8, J9
-```
-
-**F1 is a 500 mA fast 5×20 cartridge.** Real load is about 40 mA (8 × 5 mA), so
-roughly 12× margin, and far below what the JST-XH connectors (3 A) or the traces
-can carry. It is the only entry point for 12 V on this board, so it blows before
-anything else is damaged.
-
-**D1** is a unidirectional TVS: open circuit below 15 V, conducting above,
-clamping transients to ground. It earns its place because the 12 V rail is shared
-with the pump, and the motor inductance kicks back when the relay opens.
-
-## Capacitors
-
-A wire is not a short circuit — it has resistance and, more importantly,
-inductance. When a load draws current suddenly the supply cannot deliver it
-instantly through 20 cm of cable, so the local rail dips for a few microseconds.
-A capacitor near the load is a local reservoir: it supplies the fast transient
-and recharges slowly afterwards.
-
-Two different values in parallel rather than one big one, because a real
-capacitor is not ideal. An electrolytic has high capacitance but also ESR and
-parasitic inductance, so above roughly 100 kHz it stops behaving like a
-capacitor. A small ceramic has little capacitance but works into the tens of MHz.
-
-| Ref | Value | Why |
-|---|---|---|
-| C1 | 10 µF / 25 V | reservoir on the 12 V rail, which feeds eight sensors and arrives over a cable |
-| C2 | 100 nF | **footprint only, not fitted** — spare position; the level sensors switch rarely, so there is nothing fast to decouple |
-| C3 | 10 µF / 16 V | reservoir on 3V3, which arrives from the ESP32 board over a cable |
-| C4 | 100 nF | MCP23017 decoupling — the important one. Every I²C clock edge and internal transition draws a current spike in nanoseconds; without a local reservoir those spikes become supply noise, exactly the class of fault behind flaky reads. Place it as close to the socket VCC/GND pins as the layout allows: distance matters more than value. |
-
-## Resistors other than the sensor chain
-
-| Ref | Value | Why |
-|---|---|---|
-| R1, R2 | 4k7 | I²C pull-ups. I²C is open-drain: devices only pull low, so something has to return the line to 1. **Not fitted** — the RTC and the existing 2.58 k already do this, and more would drop the equivalent resistance too far. |
-| R3 | 10k | RESET pull-up. RESET is active low; floating, it can pick up noise and reset the chip at random. The CJMCU module already has one, so this sits in parallel at about 5 k equivalent — harmless, and it covers a future module that lacks one. |
-| R4, R5 | 10k | strapping pull-ups for GPIO5 / GPIO15. **Not fitted** — only needed if something is connected to `J8`/`J9` that could hold them low at boot. |
-
-## Connectors
-
-| Ref | Type | Pins |
-|---|---|---|
-| J1 | IDC 2×4 vertical | single input, 1:1 from the Freezanz J3 header |
-| JP2 | header 1×3 | +12V_RAW / out / +12V_FILT — centre pin is the output |
-| J11–J18 | XH 4p | M, GND, SIG, +12V — sensors S1…S8 |
-| J21–J23 | XH 4p | +3V3, GND, SDA, SCL — I²C expansion, 3.3 V only |
-| J8, J9 | XH 3p | +12V, GND, GPIO5 / GPIO15 — same pinout as P1/P2 |
-| J3 / J4 | socket 1×10 / 2×10 | MCP23017 module |
-| J6 | header 1×10 | GPB0…GPB7, GND, +3V3 — port B left free |
-| J7 | header 1×6 | INTA, INTB, GND, +3V3, SDA, SCL |
-| JP1 | header 1×2 | `SENS_M` → GND, open by default |
-| H1–H4 | M3 | mounting |
-
-## BOM
-
-| Qty | Value | Refs | Footprint |
-|---|---|---|---|
-| 8 | 470R 1/4W | R11–R18 | R_Axial_DIN0207 P7.62 horizontal |
-| 8 | 10k 1/4W | R21–R28 | R_Axial_DIN0207 P7.62 horizontal |
-| 1 | 10k 1/4W | R3 | R_Axial_DIN0207 P2.54 vertical |
-| 2 | 4k7 1/4W *(not fitted)* | R1, R2 | R_Axial_DIN0207 P2.54 vertical |
-| 2 | 10k 1/4W *(not fitted)* | R4, R5 | R_Axial_DIN0207 P2.54 vertical |
-| 1 | 10 µF 25 V electrolytic | C1 | CP_Radial_D6.3mm_P2.50mm |
-| 1 | 10 µF 16 V electrolytic | C3 | CP_Radial_D6.3mm_P2.50mm |
-| 1 | 100 nF ceramic | C4 | C_Disc_D5.0mm_W2.5mm_P5.00mm |
-| 1 | 100 nF ceramic *(not fitted)* | C2 | C_Disc_D5.0mm_W2.5mm_P5.00mm |
-| 1 | P6KE15A TVS | D1 | D_DO-15_P12.70mm_Horizontal |
-| 1 | 5×20 holder + F500 mA | F1 | Fuseholder_Cylinder-5x20mm Stelvio-Kontek PTF78 |
-| 1 | IDC header 2×4 vertical | J1 | IDC-Header_2x04_P2.54mm_Vertical |
-| 11 | JST-XH 4p vertical | J11–J18, J21–J23 | JST_XH_B4B-XH-A |
-| 2 | JST-XH 3p vertical | J8, J9 | JST_XH_B3B-XH-A |
-| 1 | Female socket 1×10 | J3 | PinSocket_1x10_P2.54mm_Vertical |
-| 1 | Female socket 2×10 | J4 | PinSocket_2x10_P2.54mm_Vertical |
-| 1 | Header 1×10 | J6 | PinHeader_1x10_P2.54mm_Vertical |
-| 1 | Header 1×6 | J7 | PinHeader_1x06_P2.54mm_Vertical |
-| 1 | Header 1×3 + jumper | JP2 | PinHeader_1x03_P2.54mm_Vertical |
-| 1 | Header 1×2 + jumper | JP1 | PinHeader_1x02_P2.54mm_Vertical |
-| 4 | M3 screw | H1–H4 | MountingHole_3.2mm_M3 |
-
-## Placement notes
-
-Not placed — that is yours. Two things worth knowing before you start:
-
-- A JST-XH 4-pin body is about 13 mm wide, so eight in one row need more than
-  the board is wide. Two staggered columns of four fit in about 27 mm.
-- KiCad THT footprints put their **origin on pad 1, not at the centre of the
-  body**. `R_Axial_P7.62_Horizontal` runs from −1.05 to +7.62 in x, and
-  `PinHeader_1x10` from −1.77 to +24.24 in y. Worth remembering when typing
-  coordinates by hand.
-
-## Routing notes
-
-- SDA and SCL run from `J1` pins 5 and 7 to `J3` pins 7 and 8. Keep them short
-  and away from the 12 V run — given the history of I²C timeouts on this bus,
-  that is not fussiness.
-- 12 V and 3V3 on the Power net class, 0.8 mm.
-- `SIG1..SIG8` are slow and can go anywhere.
-- GND has 35 connections and is by far the biggest net.
-
-## From project to gerbers
-
-```bash
-kicad-cli pcb export gerbers --output gerbers/ freezanz-level-io.kicad_pcb
-kicad-cli pcb export drill   --output gerbers/ freezanz-level-io.kicad_pcb
+[23:30:15.223][C][i2c.idf:093]: I2C Bus:
+[23:30:15.230][C][i2c.idf:094]:   SDA Pin: GPIO21
+[23:30:15.230][C][i2c.idf:094]:   SCL Pin: GPIO22
+[23:30:15.230][C][i2c.idf:094]:   Frequency: 100000 Hz
+[23:30:15.230][C][i2c.idf:104]:   Recovery: bus successfully recovered
+[23:30:15.232][C][i2c.idf:114]: Results from bus scan:
+[23:30:15.233][C][i2c.idf:120]: Found device at address 0x6F
 ```
 
-## Firmware note
+---
 
-With eight sensors on port A, the MCP pins in `freezanz.yaml` become `number: 0`
-through `7`:
+## Tests to perform
 
-```yaml
-  - platform: gpio
-    name: "Repellent Level S1 (min)"
-    id: repellent_level_s1
-    pin:
-      mcp23xxx: mcp23017_hub
-      number: 0
-      mode:
-        input: true
-        pullup: false     # 10k pull-up is on the board now
+| Rif. | Tipo / passo | Pin ↓ | Segnale | Tensione     | Descrizione |
+| --------------- | ------------------------ | ------------------------------ | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| **J1 (DC\_IN)** | Jack barrel Ø2.1 mm | Tip = **V+**, Sleeve = GND | TBD (12 V?) | Ingresso alimentazione continua; negativo a massa, positivo protetto da **D1** (diodo anti‑inversione, 1.22 kΩ) e instradato al bus **P+** via **H6** | |
+| **AC\_IN** | Fast-on 2 p | L / N | 230 VAC | Alimentazione di rete     | |
+| **PUMP\_OUT** | Fast-on 2 p | **PUMP P / PUMP N** | 230 VAC | Pompa nebulizzatore (relè)    | |
+| **BAT** | Fast-on 2 p | **B+ / B-** | 12 V DC | Backup battery; **B+ rail is hard‑wired to bus P+**    | |
+| **P1** | JST-XH 3 p | 1 = GPIO5, 2 = GND, 3 = **P+** | 0–3 V3 | I/O esterno; pin 3 condiviso con **P+** tramite jumper **H6**   | |
+| **J3** | Pin header (unpopulated) | 8 = **IO15** (via R89 470 Ω) | 0–3 V3 | Porta di espansione riservata (non cablata di serie)    | |
+| **LED\_EXT** | JST-XH 3 p | TBD | 0–3 V3 | Connettore LED esterni    | |
+
+### Silkscreen power rail labels (bottom edge)
+
+| Label serigrafia | Rail / Signal                                          |
+| ---------------- | ------------------------------------------------------ |
+| **P+**           | "PUMP P" – Positive supply rail for pump & peripherals |
+| **P-**           | "PUMP N" – Return/ground for pump                      |
+| **B+**           | "BATT P" – Battery positive (internally tied to P+)    |
+| **B-**           | "BATT N" – Battery negative                            |
+
+## Connettore **J4** — Header di programmazione ESP32
+
+| Rif. | Tipo / passo | Pin ↓ | Segnale | Tensione | Descrizione |
+| --------------- | ------------------- | ------------------------------ | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| **J1 (DC\_IN)** | Jack barrel Ø2.1 mm | Tip = **V+**, Sleeve = GND | TBD (12 V?) | Ingresso alimentazione continua; negativo a massa, positivo protetto da **D1** (diodo anti‑inversione, 1.22 kΩ) e instradato al bus **P+** via **H6** | |
+| **AC\_IN** | Fast-on 2 p | L / N | 230 VAC | Alimentazione di rete | |
+| **PUMP\_OUT** | Fast-on 2 p | **PUMP P / PUMP N** | 230 VAC | Pompa nebulizzatore (relè) | |
+| **BAT** | Fast-on 2 p | **B+ / B-** | 12 V DC | Backup battery; **B+ rail is hard‑wired to bus P+** | |
+| **P1** | JST‑XH 3 p | 1 = GPIO5, 2 = GND, 3 = **P+** | 0–3 V3 | I/O esterno; pin 3 condiviso con **P+** tramite jumper **H6** | |
+| **LED\_EXT** | JST‑XH 3 p | TBD | 0–3 V3 | Connettore LED esterni | |
+
+### Silkscreen power rail labels (bottom edge)
+
+| Label serigrafia | Rail / Signal                                          |
+| ---------------- | ------------------------------------------------------ |
+| **P+**           | "PUMP P" – Positive supply rail for pump & peripherals |
+| **P-**           | "PUMP N" – Return/ground for pump                      |
+| **B+**           | "BATT P" – Battery positive (internally tied to P+)    |
+| **B-**           | "BATT N" – Battery negative                            |
+
+## Connettore **J4** — Header di programmazione ESP32 **J4** — Header di programmazione ESP32 **J1** — Header di programmazione ESP32
+
+| Pin J1 | Segnale scheda   | Collegare FTDI        | Pad modulo | Descrizione                         |
+| ------ | ---------------- | --------------------- | ---------- | ----------------------------------- |
+| 1      | **BOOT / GPIO0** | — (strap)             | Pin 25     | LOW all’accensione → bootloader     |
+| 2      | **TX0 / GPIO1**  | RX FTDI               | Pin 35     | UART console 115 200 8N1            |
+| 3      | **RX0 / GPIO3**  | TX FTDI               | Pin 34     | UART console                        |
+| 4      | **VCC 3,3V**    | 3 V 3 FTDI (≥ 500 mA) | —          | Alimenta la logica durante il flash |
+| 5      | **EN / RESET**   | —                     | Pin 3      | CHIP\_EN — LOW ⇒ reset              |
+| 6      | **GND**          | GND FTDI              | —          | Riferimento comune                  |
+
+> **Procedura di flash**
+>  1 Disconnettere la scheda da potenza.
+>  2 Collegare FTDI 3 V 3.
+>  3 Tenere BOOT e EN LOW, quindi rilasciare EN → HIGH, poi BOOT → HIGH.
+>  4 `esptool.py --chip esp32 --baud 921600 write_flash 0x0 firmware.bin`
+
+---
+
+## Pin‑out **ESP32‑WROOM‑32E** (basato su LastMinuteEngineer + mapping Freezanz)
+
+| Pin # | Pin Label | GPIO |**Freezanz Function** |Tipo |Note |Reason |Safe to use? |
+| - | ---------- | ---- |------------------------- |--------------- |------ |----------- |------------ |
+| 1 | GND | — | — | — | Ground pad | Ground | ✔︎ |
+| 2 | 3V3 | — | — | — | Main 3.3 V rail | Power supply | ✔︎ |
+| 3 | **EN** | — | **Reset (CHIP_EN)** | Input | J1‑5 · LOW ⇒ reset | Chip enable / strapping | ⚠︎ |
+| 4 | SENSOR\_VP | 36 | — | ADC input |  TBD — SW probe   | Input‑only | ✗ |
+| 5 | SENSOR\_VN | 39 | — | ADC input |  TBD — SW probe   | Input‑only | ✗ |
+| 6 | IO34 | 34 | N/C | ADC / input | Footprint **D5** (non popolato) | Input‑only | ✗ |
+| 7 | IO35 | 35 | N/C | ADC / input | Footprint **D45** (non popolato) | Input‑only | ✗ |
+| 8 | IO32 | 32 | **SW3** (Start/Stop) | Input (PULL‑UP) | Pulsante LOW ⇒ pressed   | — | ✔︎ |
+| 9 | IO33 | 33 | **SW2** (On/Off) | Input (PULL‑UP) | Pulsante LOW ⇒ pressed | — | ✔︎ |
+| 10 | IO25 | 25 | **LED D7** (Red) | Output | High = ON | — | ✔︎ |
+| 11 | IO26 | 26 | **Buzzer** | PWM Out | PWM Out (frequenze udibili testate: 1.5 / 2.5 / 3 / 4 / 5 kHz) | — | ✔︎ |
+| 12 | IO27 | 27 | — | — | R24->R23->Q7->X20->P- | — | ✔︎ |
+| 13 | IO14 | 14 | — | — | Non usato (VERIFICARE) | — | ✔︎ |
+| 14 | IO12 | 12 | N/C | — | Collegato a **R35** (N/C) | Strapping · LOW al boot | ⚠︎ |
+| 15 | GND | — | — | — | Non usato sulla scheda (pad GND) | Ground | ✔︎ |
+| 16 | IO13 | 13 | **IPOTESI** SW2_DRV (via Q4, accensione via software) - routing R27 -> R9 -> Q4 (piedino destro) -> Q4 (piedino centrale) -> R100 -> R71(?) -> Piedino vicino D11 SW2 ON/OFF | — | — | Strapping | ⚠︎ | Non disponibile |
+| 17 | SD2 | 9 | — | — | Non disponibile | SPI flash interno | ✗ |
+| 18 | SWP/SD3 | 10 | — | — | Non disponibile | SPI flash interno | ✗ |
+| 19 | SCS/CMD | 11 | — | — | Non disponibile | SPI flash interno | ✗ |
+| 20 | SCK/CLK | 6 | — | — | Non disponibile | SPI flash interno | ✗ |
+| 21 | SDO/SD0 | 7 | — | — | Non disponibile | SPI flash interno | ✗ |
+| 22 | SDI/SD1 | 8 | — | — | Non disponibile | SPI flash interno | ✗ |
+| 23 | IO15 | 15 | **Expansion line (J3‑8)** | I/O | Via **R91** (not fitted) & **C30→GND**, then through **R89 470 Ω** to connector **J3‑pin 8** (header currently unpopulated) – reserved for future external signal | Boot‑strapping pin (must be **HIGH** at reset) | ⚠︎ |
+| 24 | IO2 | 2 | **Line via R95 → D9** | I/O | Series **R95 150 Ω** to node with **D9** and pulldown **R76 8.3 kΩ**; D9 centre via **R8 10 kΩ** to GND. Purpose TBD (possible indicator or external sense). | Must be LOW at boot (strapping) | ⚠︎ |
+| 25 | IO0 | 0 | **BOOT (J1‑1)** | Input | LOW al reset ⇒ flash | Boot / flash mode | ⚠︎ |
+| 26 | IO4 | 4 | — | — | Non usato | — | ✔︎ |
+| 27 | IO16 | 16 | — | — | Non usato | — | ✔︎ |
+| 28 | IO17 | 17 | — | — | Non usato | — | ✔︎ |
+| 29 | IO5 | 5 | **P1‑1** | TBD input | Connettore P1 pin sinistro | Must be HIGH at boot | ⚠︎ |
+| 30 | IO18 | 18 | **LED D6** (Green) | Output | High = ON | — | ✔︎ |
+| 31 | IO19 | 19 | **LED D3** (Blue) | Output | High = ON | — | ✔︎ |
+| 33 | IO21 | 21 | **RTC I²C SDA (addr 0x6F; clock ticking)** | I/O | **SDA** which keep the clock through IC29 & Y2. Path: **R455** (290 Ω) Ω -> **R69 220 Ω** -> IC29 3rd pin from top‑left | Default I²C **SDA** | ✔︎ |
+| 34 | RXD0 | 3 | **UART RX0 (J1‑3)** | Input | 115 200 8N1 console | UART / flashing | ⚠︎ |
+| 35 | TXD0 | 1 | **UART TX0 (J1‑2)** | Output | 115 200 8N1 console | UART / flashing | ⚠︎ |
+| 36 | IO22 | 22 | **RTC I²C SCL (addr 0x6F; clock ticking)** | I/O | **SCL** which keep the clock through IC29 & Y2. Path: **R452** (290 Ω) -> **R69 220 Ω** → IC29 3rd pin from top‑left | Default I²C **SCL** | ✔︎ |
+| 37 | IO23 | 23 | **LED D7** (Green) | Output | High = ON | — | ✔︎ |
+| 38 | GND | — | — | — | Non usato sulla scheda (pad GND termico) | Ground | ✔︎ |
+
+---
+
+## Indicatori & pulsanti
+
+### LED
+
+| LED                | GPIO                    | Stato                           | Significato             |
+| ------------------ | ----------------------- | ------------------------------- | ----------------------- |
+| **D6** (Verde)     | 18                      | Solid                           | Nebulizzazione in corso |
+|                    |                         | Blink                           | Pulse cycle             |
+| **D3** (Blu)       | 19                      | Solid                           | Wi‑Fi attivo            |
+|                    |                         | Blink                           | Wi‑Fi connesso          |
+| **D7** (Bi‑colore) | 25 (Rosso) / 23 (Verde) | Rosso = allarme, Verde = pronto |                         |
+
+### Pulsanti
+
+| Pulsante | GPIO | Funzione   | Note            |
+| -------- | ---- | ---------- | --------------- |
+| **SW2**  | 33   | ON/OFF     | Pull‑up interno |
+| **SW3**  | 32   | START/STOP | Pull‑up interno |
+
+### Buzzer
+
+| GPIO | Funzione     | Segnale           |
+| ---- | ------------ | ----------------- |
+| 26   | Piezo buzzer | PWM 2‑4 kHz (TBD) |
+
+## Buzzer circuit — detail
+
+### Components
+
+| Ref | Value | Function |
+|-----|-------|----------|
+| Q6 | BST82 (marking "68W 02") | N-Channel Enhancement Mode Vertical DMOS FET, SOT-23 |
+| R14 | 4K7 | Series resistor on GPIO side — limits gate current |
+| R13 | 2K2 | Pull-down resistor to GND — voltage divider, stabilizes gate |
+
+### Wiring
+
+- **Piezo (+)**: connected directly to **P+ rail (12V)** with no components in between
+- **Piezo (-)**: connected to **Q6 Drain**
+- **Q6 Source**: GND
+- **Q6 Gate**: GPIO26 → R14 (4K7) → R13 (2K2) → GND
+
+### Gate voltage
+
+With GPIO26 HIGH (3.3V), the R14/R13 divider brings the gate to:
+
+```
+Vgate = 3.3V × (2200 / (4700 + 2200)) ≈ 1.05V
 ```
 
-`pullup: false` because the 10k now lives on the PCB. And remember that
-`inverted:` writes the IPOL register on the chip — the bug that already cost an
-evening.
+Sufficient to exceed the BST82 Vgs threshold (~0.8–1.5V typical for DMOS FET).
+
+### Volume modulation — analysis and hypotheses
+
+FFT measurements on audio recordings at 3 distinct volume levels show that
+the RMS amplitude varies by approximately **10×** between minimum and maximum volume,
+confirming that the original firmware does effectively modulate volume.
+
+| Level | Measured RMS | Dominant frequency |
+|-------|--------------|--------------------|
+| vol1 (low)    | ~0.004 | 5200 Hz (2× harmonic of 2600 Hz) |
+| vol2 (medium) | ~0.025 | 5200 Hz (2× harmonic of 2600 Hz) |
+| vol3 (high)   | ~0.055 | 5200 Hz (2× harmonic of 2600 Hz) |
+
+Since the +12V is directly connected to the piezo with no control components,
+modulation can only occur **on the Q6 gate**.
+
+Technical hypotheses for volume modulation, in order of likelihood:
+
+1. **Hardware DAC (GPIO26 = DAC2)** — the original firmware uses the DAC instead
+   of PWM to generate a variable DC voltage on the gate, driving the BST82 into
+   its linear region and modulating the Drain-Source resistance. To verify:
+   measure Q6 gate with oscilloscope at different volume levels with original
+   firmware — if the DC level changes, this hypothesis is confirmed.
+
+2. **Variable PWM duty cycle** — the firmware varies the PWM duty cycle,
+   modifying the average conduction time of the BST82. Less likely because
+   with a fast-switching MOSFET the effect on perceived volume is limited.
+
+3. **Frequency near/far from piezo resonance** — the piezo responds non-linearly
+   to frequency; it sounds louder near its mechanical resonance frequency.
+   Partially supported by the variation in dominant frequency measured across levels.
+
+### TODO — oscilloscope verification
+
+- [ ] Measure waveform on Q6 gate with original firmware at min and max volume
+- [ ] Check whether DC level on gate changes with volume (confirms DAC hypothesis)
+- [ ] Check whether PWM duty cycle changes with volume (confirms variable PWM hypothesis)
+- [ ] Measure mechanical resonance frequency of the piezo (volume peak)
+
+## P1 connector — liquid flow sensor
+
+### Description
+
+P1 is a **liquid flow sensor** connected via JST-XH 3-pin connector.
+The sensor outputs a signal proportional to liquid flow on the return pin.
+
+### Wiring
+
+| P1 Pin | Signal | Description |
+|--------|--------|-------------|
+| 1 | GPIO5 | Signal return pin |
+| 2 | GND | Ground reference |
+| 3 | P+ (12V via H6) | Sensor power supply |
+
+### Signal behavior
+
+- **Normal state (water flowing)**: return pin at ~9V (HIGH after voltage divider)
+- **Fault state (no water)**: return pin pulled to GND (LOW)
+- During normal pump activation, multiple state transitions are expected on this pin.
+
+### Voltage protection
+
+The sensor return pin operates at ~9V. Direct connection to GPIO5 (max 3.3V)
+would destroy the ESP32. A voltage divider or level shifter **must be present**
+between P1 pin 1 and GPIO5 on the PCB — verify resistor values on PCB traces
+between P1 connector and GPIO5.
+
+### Pull-down
+
+Since the signal is externally driven (HIGH = ~3.3V after divider, LOW = GND),
+the ESP32 internal pull-up must be disabled. An external pull-down resistor
+is recommended to guarantee a defined LOW state when the sensor is disconnected.
+If a resistor to GND is already present on the PCB on this line, it may be sufficient.
+
+### TODO
+
+- [ ] Identify and measure voltage divider components between P1 pin 1 and GPIO5
+- [ ] Determine exact timing pattern of state transitions during normal pump activation
+- [ ] Define threshold (duration of LOW) to classify as water fault vs normal transition
+
+---
+
+## Ponticelli / Jumper
+
+| Jumper | Default           | Collega                  | Funzione                                                            |
+|--------|-------------------|--------------------------|---------------------------------------------------------------------|
+| **H6** | CHIUSO (fabbrica) | **P1-3 (P+)** ↔ **12 VCC**  | Collega il pin 3 del connettore P1 alla linea VCC (DC_IN/BATT P); aprirlo isola P1 dalla VCC esterna |
+
+---
+
+## Tests to perform
+
+### IO13 — Virtual ON/OFF Driver
+
+**Goal**
+Verificare che **GPIO13** possa emulare la pressione del pulsante **SW2** (On/Off) tramite il transistor Q4 (BC817-25).
+
+**Test procedure**
+1. Inizializza i pin in MicroPython:
+   ```python
+   from machine import Pin
+   import time
+
+   sw2_drv = Pin(13, Pin.OUT)
+   sw2_drv.value(0)                       # transistor inizialmente spento
+
+   # GPIO33 normally read the ON/OFF (SW2) button state
+   sw2_in = Pin(33, Pin.IN, Pin.PULL_UP)  # legge lo stato del pulsante SW2
+   ```
+
+2. Baseline: premi fisicamente SW2 e verifica in REPL:
+   ```python
+   print("SW2 manual press:", "LOW" if sw2_in.value()==0 else "HIGH")
+   ```
+   Deve stampare LOW quando premi.
+
+3.	Emulazione: senza toccare il pulsante, esegui:
+   ```python
+   sw2_drv.value(1)
+   time.sleep(0.2)
+   sw2_drv.value(0)
+   print("SW2 emulated press:", "LOW" if sw2_in.value()==0 else "HIGH")
+   ```
+   * Controlla che sw2_in.value() ritorni 0 (LOW) durante il pulse.
+   * Verifica che l’unità si accenda/spegna come con una pressione fisica.
+
+   3. (Opzionale) Collega un oscilloscopio alla linea SW2 per osservare il fronte netto grazie al feedback R9.
+
+---
+
+IO2 — RTC Square-Wave / Alarm Output
+
+Goal
+Confermare che GPIO2 riceva un segnale a 1 Hz dall’MFP/SQW pin dell’RTC MCP7940M attraverso la rete R95 → D9 → R76.
+
+Test procedure
+```python
+from machine import Pin, I2C
+import time
+
+# 1) Inizializza I²C su GPIO21/22
+i2c = I2C(0, scl=Pin(22), sda=Pin(21), freq=100000)
+
+# 2) Abilita il square-wave 1 Hz (registro 0x07)
+addr = 0x6F
+ctrl = i2c.readfrom_mem(addr, 0x07, 1)[0]
+ctrl |= 0x10      # SQWE = 1 (enable square-wave)
+ctrl &= ~0x03     # RS = 00 (set 1 Hz)
+i2c.writeto_mem(addr, 0x6F, bytes([ctrl]))
+
+# 3) Conta i fronti su GPIO2
+pulse = Pin(2, Pin.IN)
+edges = 0
+def on_rise(pin):
+    global edges
+    edges += 1
+
+pulse.irq(trigger=Pin.IRQ_RISING, handler=on_rise)
+time.sleep(5)
+print("Edges in 5 s:", edges)  # Atteso ≈ 5
+```
+* Se conti circa 5 fronti in 5 s, il crystal e l’RTC funzionano.
+
+---
+
+Quando entrambi i test passano, l’emulazione del pulsante e il segnale RTC sono confermati.
+
+---
+
+### R452 / R455 — identificazione pull-up I²C
+
+**Problema**
+
+Questo documento si contraddice sulle stesse due sigle:
+
+| Riferimento | Descrizione |
+| ----------- | ----------- |
+| Note I2C su J3 (sopra) | R452, R455 **da 3K3 verso VCC**, attive tramite pin 3 → sono **pull-up** |
+| Tabella pin-out ESP32 (IO21 / IO22) | R455 e R452 **da 290 Ω** verso R69 → IC29 → sono **resistenze di serie** |
+
+Sono due topologie incompatibili: la stessa resistenza non può essere un pull-up
+da 3K3 verso VCC e contemporaneamente 290 Ω in serie sulla linea SDA/SCL. Il
+README della breakout `freezanz-level-io` cita un terzo valore ancora, 2.58 k.
+
+**Perché è importante**
+
+La breakout lascia **R1/R2 (4k7) non popolate** proprio assumendo che i pull-up
+esistano già a monte. Se il valore corretto è 290 Ω allora sono resistenze di
+serie, su J3 non arriva alcun pull-up, e il bus I²C della breakout non ne ha —
+il che spiegherebbe i timeout e il motivo per cui in `freezanz.yaml` la
+frequenza è scesa da 100 kHz a `10kHz`.
+
+Nota a favore dell'ipotesi pull-up: l'RTC a 0x6F viene enumerato e il clock
+avanza, e senza pull-up l'I²C non può funzionare. Quindi un pull-up esiste da
+qualche parte; resta da stabilire se sia raggiungibile dal lato J3.
+
+**Ipotesi di riconciliazione**: 3K3 è il valore nominale e 2.58 k è una misura
+in-circuito dello stesso in parallelo a qualcos'altro (3.3 k ∥ 11.8 k = 2.58 k).
+In quel caso l'unico dato errato sarebbe il 290 Ω. Da verificare.
+
+**Test procedure**
+
+Scheda alimentata, nessun dispositivo che pilota il bus:
+
+1. Alimentare **J3 pin 3** (3.3 V): i pull-up sono dichiarati attivi solo
+   tramite quel pin.
+2. Misurare la tensione DC a riposo su **J3 pin 5 (SDA)** e **J3 pin 7 (SCL)**:
+   * ~3.3 V ⇒ pull-up presenti e raggiungibili da J3
+   * ~0 V o flottante ⇒ nessun pull-up su J3 → servono R1/R2 sulla breakout
+3. Determinarne il valore: collegare una resistenza nota da **3.3 kΩ** fra SDA e
+   GND e rimisurare SDA. Con `V = 3.3 × Rload / (Rpu + Rload)`:
+
+   | V misurata | Rpu dedotta | Conclusione |
+   | ---------- | ----------- | ----------- |
+   | ~1.65 V | ~3.3 kΩ | pull-up confermati — R1/R2 restano non popolate |
+   | ~3.0 V | ~290 Ω | è una serie — la breakout deve popolare R1/R2 |
+
+4. Ripetere il punto 3 su SCL (pin 7).
+5. Aggiornare di conseguenza la sezione "Note I2C su J3" **e** la tabella
+   pin-out ESP32, eliminando il valore errato.
+
+
+---
+
+
+## TODO
+
+* [x] Investigate **IO15 / J3‑8** expansion line: mappato completo, GPIO15 via R89 470Ω → R106 0Ω. Condiviso con P2 pin 3.
+* [x] Mappatura completa J3: I2C expansion header con pull-up 3K3, GPIO5, GPIO15.
+* [x] Mappatura J8: LED esterni 12V, catodi D7 rosso/verde e D3 esposti con resistenze già in serie.
+* [x] Mappatura P2: secondo sensore dry contact su GPIO15, stesso schema P1/GPIO5.
+* [x] Correzione P1: pin 1 = 12V (P+ via H6), pin 3 = sensore → R71 38KΩ → R107 0Ω → GPIO5.
+* [x] Phase‑2 test: board re‑installed in unit.
+* [ ] **R452 / R455**: risolvere la contraddizione 3K3 pull-up verso VCC vs 290 Ω in serie — vedi il test dedicato sopra. Da questo dipende se la breakout `freezanz-level-io` debba popolare R1/R2, e potrebbe essere la causa dei timeout I²C.
+* [ ] **Tensione reale della rail 12 V**: misurarla. D1 sulla breakout è un P6KE15A, stand-off 12.8 V: se la rail sta sopra (es. 13.8 V) il TVS lavora in perdita e si scalda. I condensatori (C1 25 V) reggono comunque.
+* [ ] **PUMP: 12 VCC o 230 VAC?** Il riepilogo connettori dice 12 VCC, la tabella "Tests to perform" dice 230 VAC. Da cui dipende anche la giustificazione del TVS D1 sulla breakout.
+* [ ] SENSOR\_VP/VN: log ADC values in real operation.
+* [ ] Draw partial schematic in KiCad.
+* [ ] Understand how the serial port of the original firmware is working
+* [ ] Understand how to lower the volume of the buzzer
+
