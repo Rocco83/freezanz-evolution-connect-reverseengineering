@@ -2,6 +2,8 @@ esphome:
   # Hostname for the device; mac_suffix differentiates multiple units
   name: espfreezanz
   friendly_name: Freezanz
+  includes:
+    - mcp_tools.h          # portable I2C / MCP23017 diagnostics (C++)
   on_boot:
     priority: 600
     then:
@@ -10,6 +12,15 @@ esphome:
       - lambda: |-
           id(pump_time_remaining).publish_state(NAN);
           id(pump_progress).publish_state(NAN);
+
+# Shared, project-agnostic diagnostics. Provides the scripts
+# dump_mcp23017_registers(addr) and i2c_bus_scan; the buttons that call them
+# are declared in the button: section below, one per chip.
+packages:
+  mcp_tools: !include
+    file: mcp_tools.yaml
+    vars:
+      i2c_id: bus_i2c
 
 esp32:
   board: esp32dev
@@ -138,6 +149,25 @@ button:
       then:
         - script.execute: buzzer_stop_sequence
 
+  # --- diagnostics from the mcp_tools package (scripts) ---
+  # One button per MCP23017 on the bus. This board has a single chip at 0x20;
+  # add more entries with a different addr: if you fit an expander.
+  - platform: template
+    name: "Dump MCP 0x20"
+    icon: "mdi:chip"
+    entity_category: "diagnostic"
+    on_press:
+      - script.execute:
+          id: dump_mcp23017_registers
+          addr: 0x20
+
+  - platform: template
+    name: "I2C Bus Scan"
+    icon: "mdi:magnify-scan"
+    entity_category: "diagnostic"
+    on_press:
+      - script.execute: i2c_bus_scan
+
 text_sensor:
   - platform: template
     name: "OTA Partition"
@@ -169,11 +199,11 @@ text_sensor:
     id: repellentliquid_status
     icon: "mdi:bottle-tonic"
     lambda: |-
-      if (id(repellent_level_s3).state) return {"OK"};
-      if (id(repellent_level_s2).state) return {"OK"};
-      if (id(repellent_level_s1).state) return {"Warning"};
-      if (id(repellent_level_s0).state) return {"Critical"};
-      return {"CRITICAL"};
+      const int top = id(level_top);   // see recompute_level
+      if (top == 0) return {"Empty"};
+      if (top <= 2) return {"Critical"};
+      if (top <= 4) return {"Warning"};
+      return {"OK"};
     update_interval: 60s
 
 sensor:
@@ -284,11 +314,8 @@ sensor:
     accuracy_decimals: 0
     icon: "mdi:bottle-tonic"
     lambda: |-
-      if (id(repellent_level_s3).state) return 100.0f;
-      if (id(repellent_level_s2).state) return 75.0f;
-      if (id(repellent_level_s1).state) return 50.0f;
-      if (id(repellent_level_s0).state) return 25.0f;
-      return 0.0f;
+      const int top = id(level_top);   // see recompute_level
+      return top * 12.5f;
     update_interval: 10s
 
 
@@ -331,7 +358,7 @@ binary_sensor:
     device_class: problem
     icon: "mdi:bottle-tonic"
     lambda: |-
-      return !(id(repellent_level_s0).state);
+      return !(id(repellent_level_s1).state);
 
   # SW2 — ON/OFF button (GPIO33, active LOW, internal pull-up)
   - platform: gpio
@@ -451,20 +478,18 @@ binary_sensor:
     lambda: |-
       return id(sensor_water_flow_raw).state;
     filters:
-      - delayed_on: 50ms
+      - delayed_on: 7ms # 10ms does not allow to turn on while the time is ~13-15ms normally
       - delayed_off: 500ms
     on_press:
       then:
         - lambda: |-
             ESP_LOGI("water", "Water pressure OK — count of missed water events: %d", id(water_flow_missing_counter));
-        - script.execute: water_pressure_watchdog 
         - script.execute: update_sensors
     on_release:
       then:
         - lambda: |-
             id(water_flow_missing_counter)++;
             ESP_LOGI("water", "Water pressure lost — total missing water events: %d", id(water_flow_missing_counter));
-        - script.execute: water_pressure_watchdog 
         - script.execute: update_sensors
 
   # GPIO14 — undocumented, verify
@@ -504,87 +529,186 @@ binary_sensor:
     entity_category: "diagnostic"
 
 # Optional
-  # Level sensors — XKC-Y25-NPN, NPN open-collector, pull-up interno MCP (~100kΩ)
+  # Level sensors S1..S8 — XKC-Y25-NPN, NPN open-collector, 10k pull-up on the
+  # I/O board (R21-R28). Wired to MCP23017 PORT B: GPB0..GPB7 = ESPHome number
+  # 8..15. The J4 socket columns were swapped to match the real CJMCU module,
+  # so the sensors are on port B, not port A.
   # NPN: LOW = liquid detected, HIGH = dry → inverted: true
   - platform: gpio
-    name: "Repellent Level S0 (min)"
-    id: repellent_level_s0
+    name: "Repellent Level S1 (min)"
+    id: repellent_level_s1
     icon: "mdi:gauge-empty"
     entity_category: "diagnostic"
     pin:
       mcp23xxx: mcp23017_hub
-      number: 0
+      number: 8
       mode:
         input: true
-        pullup: true
-      inverted: true
-    filters:
-      #- delayed_on: 500ms
-      #- delayed_off: 500ms
-      - delayed_on: 10ms
-      - delayed_off: 10ms
-    on_state:
-      then:
-        - lambda: |-
-            ESP_LOGW("level", "S0 state changed: %d", id(repellent_level_s0).state);
-        - lambda: |-
-            // If any sensor sees liquid, clear the orange warning
-            if (id(repellent_level_s0).state || id(repellent_level_s1).state ||
-                id(repellent_level_s2).state || id(repellent_level_s3).state) {
-              id(sw_led_red_d7).turn_off();
-            } else {
-              id(sw_led_red_d7).turn_on();  // all dry → orange
-            }
-        - lambda: |-
-            ESP_LOGW("level", "S0 state changed: %d", id(repellent_level_s0).state);
-
-  - platform: gpio
-    name: "Repellent Level S1"
-    id: repellent_level_s1
-    icon: "mdi:gauge-low"
-    entity_category: "diagnostic"
-    pin:
-      mcp23xxx: mcp23017_hub
-      number: 1
-      mode:
-        input: true
-        pullup: true
+        pullup: false     # 10k on the I/O board (R21-R28)
       inverted: true
     filters:
       - delayed_on: 500ms
       - delayed_off: 500ms
+    on_state:
+      then:
+        - lambda: |-
+            ESP_LOGD("level", "S1 state changed: %d", id(repellent_level_s1).state);
+        - script.execute: recompute_level
+        - script.execute: update_d7_led
 
   - platform: gpio
     name: "Repellent Level S2"
     id: repellent_level_s2
+    icon: "mdi:gauge-low"
+    entity_category: "diagnostic"
+    pin:
+      mcp23xxx: mcp23017_hub
+      number: 9
+      mode:
+        input: true
+        pullup: false     # 10k on the I/O board (R21-R28)
+      inverted: true
+    filters:
+      - delayed_on: 500ms
+      - delayed_off: 500ms
+    on_state:
+      then:
+        - lambda: |-
+            ESP_LOGD("level", "S2 state changed: %d", id(repellent_level_s2).state);
+        - script.execute: recompute_level
+        - script.execute: update_d7_led
+
+  - platform: gpio
+    name: "Repellent Level S3"
+    id: repellent_level_s3
+    icon: "mdi:gauge-low"
+    entity_category: "diagnostic"
+    pin:
+      mcp23xxx: mcp23017_hub
+      number: 10
+      mode:
+        input: true
+        pullup: false     # 10k on the I/O board (R21-R28)
+      inverted: true
+    filters:
+      - delayed_on: 500ms
+      - delayed_off: 500ms
+    on_state:
+      then:
+        - lambda: |-
+            ESP_LOGD("level", "S3 state changed: %d", id(repellent_level_s3).state);
+        - script.execute: recompute_level
+        - script.execute: update_d7_led
+
+  - platform: gpio
+    name: "Repellent Level S4"
+    id: repellent_level_s4
     icon: "mdi:gauge"
     entity_category: "diagnostic"
     pin:
       mcp23xxx: mcp23017_hub
-      number: 2
+      number: 11
       mode:
         input: true
-        pullup: true
+        pullup: false     # 10k on the I/O board (R21-R28)
       inverted: true
     filters:
       - delayed_on: 500ms
       - delayed_off: 500ms
+    on_state:
+      then:
+        - lambda: |-
+            ESP_LOGD("level", "S4 state changed: %d", id(repellent_level_s4).state);
+        - script.execute: recompute_level
+        - script.execute: update_d7_led
 
   - platform: gpio
-    name: "Repellent Level S3 (Max)"
-    id: repellent_level_s3
+    name: "Repellent Level S5"
+    id: repellent_level_s5
+    icon: "mdi:gauge"
+    entity_category: "diagnostic"
+    pin:
+      mcp23xxx: mcp23017_hub
+      number: 12
+      mode:
+        input: true
+        pullup: false     # 10k on the I/O board (R21-R28)
+      inverted: true
+    filters:
+      - delayed_on: 500ms
+      - delayed_off: 500ms
+    on_state:
+      then:
+        - lambda: |-
+            ESP_LOGD("level", "S5 state changed: %d", id(repellent_level_s5).state);
+        - script.execute: recompute_level
+        - script.execute: update_d7_led
+
+  - platform: gpio
+    name: "Repellent Level S6"
+    id: repellent_level_s6
+    icon: "mdi:gauge"
+    entity_category: "diagnostic"
+    pin:
+      mcp23xxx: mcp23017_hub
+      number: 13
+      mode:
+        input: true
+        pullup: false     # 10k on the I/O board (R21-R28)
+      inverted: true
+    filters:
+      - delayed_on: 500ms
+      - delayed_off: 500ms
+    on_state:
+      then:
+        - lambda: |-
+            ESP_LOGD("level", "S6 state changed: %d", id(repellent_level_s6).state);
+        - script.execute: recompute_level
+        - script.execute: update_d7_led
+
+  - platform: gpio
+    name: "Repellent Level S7"
+    id: repellent_level_s7
     icon: "mdi:gauge-full"
     entity_category: "diagnostic"
     pin:
       mcp23xxx: mcp23017_hub
-      number: 3
+      number: 14
       mode:
         input: true
-        pullup: true
+        pullup: false     # 10k on the I/O board (R21-R28)
       inverted: true
     filters:
       - delayed_on: 500ms
       - delayed_off: 500ms
+    on_state:
+      then:
+        - lambda: |-
+            ESP_LOGD("level", "S7 state changed: %d", id(repellent_level_s7).state);
+        - script.execute: recompute_level
+        - script.execute: update_d7_led
+
+  - platform: gpio
+    name: "Repellent Level S8 (max)"
+    id: repellent_level_s8
+    icon: "mdi:gauge-full"
+    entity_category: "diagnostic"
+    pin:
+      mcp23xxx: mcp23017_hub
+      number: 15
+      mode:
+        input: true
+        pullup: false     # 10k on the I/O board (R21-R28)
+      inverted: true
+    filters:
+      - delayed_on: 500ms
+      - delayed_off: 500ms
+    on_state:
+      then:
+        - lambda: |-
+            ESP_LOGD("level", "S8 state changed: %d", id(repellent_level_s8).state);
+        - script.execute: recompute_level
+        - script.execute: update_d7_led
 
 output:
   # D6 — Green LED (activity in progress - e.g. nebulization)
@@ -785,6 +909,19 @@ i2c:
 
 # --- RTC helpers -----------------------------------------------------------
 globals:
+  # Derived from the S1..S8 ladder by the recompute_level script — the single
+  # place that logic lives. level_top = number of CONSECUTIVE wet sensors from
+  # the bottom; the first dry one ends the run, because the tank fills from the
+  # bottom and a wet sensor above a dry one is a fault, not liquid.
+  - id: level_top
+    type: int
+    restore_value: no
+    initial_value: '0'
+  - id: level_gap
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+
   - id: rtc_address
     type: uint8_t
     restore_value: no
@@ -829,7 +966,7 @@ number:
     icon: "mdi:timer-edit"
     entity_category: "config"
     min_value: 10
-    max_value: 120
+    max_value: 300
     step: 5
     initial_value: 90
     unit_of_measurement: "s"
@@ -955,10 +1092,11 @@ script:
 
   - id: pump_start
     then:
+      - script.execute: recompute_level
       - lambda: |-
           // exit if no mosquito liquid is found
-          if (!id(repellent_level_s0).state && !id(repellent_level_s1).state &&
-              !id(repellent_level_s2).state && !id(repellent_level_s3).state) {
+          const int top = id(level_top);   // see recompute_level
+          if (top == 0) {
             ESP_LOGW("pump", "Empty tank — pump blocked");
             id(pump_start).stop();
             return;
@@ -987,7 +1125,8 @@ script:
           // reset to 0 the timer - in case of time drift
           id(pump_start_time) = millis();
           id(action_running) = true;
-          id(sw_pump_on_switch).turn_on();
+
+      - switch.turn_on: sw_pump_on_switch
 
       - script.execute: water_pressure_watchdog
 
@@ -1271,6 +1410,24 @@ script:
             id(action_running) || id(pre_cycle_running));
       - script.execute: update_d7_led
 
+  - id: recompute_level
+    mode: single
+    then:
+      - lambda: |-
+          const bool lv[8] = { id(repellent_level_s1).state, id(repellent_level_s2).state,
+                               id(repellent_level_s3).state, id(repellent_level_s4).state,
+                               id(repellent_level_s5).state, id(repellent_level_s6).state,
+                               id(repellent_level_s7).state, id(repellent_level_s8).state };
+          int top = 0;
+          for (int i = 0; i < 8; i++) {
+            if (!lv[i]) break;          // first dry sensor ends the run
+            top = i + 1;
+          }
+          bool gap = false;
+          for (int i = top; i < 8; i++) if (lv[i]) gap = true;
+          id(level_top) = top;
+          id(level_gap) = gap;
+
   - id: update_d7_led
     then:
       # update LED D7 - on/off, water missing, repellent missing
@@ -1280,8 +1437,8 @@ script:
             id(sw_led_red_d7).turn_off();
             return;
           }
-          if (!id(repellent_level_s0).state && !id(repellent_level_s1).state &&
-              !id(repellent_level_s2).state && !id(repellent_level_s3).state) {
+          const int top = id(level_top);   // see recompute_level
+          if (top == 0) {
             id(sw_led_green_d7).turn_on();
             id(sw_led_red_d7).turn_on();
             ESP_LOGW("led", "Empty Tank -> LED orange");
@@ -1333,9 +1490,16 @@ interval:
   - interval: 30s
     then:
       - lambda: |-
-          ESP_LOGD("level", "S0=%d S1=%d S2=%d S3=%d",
-            id(repellent_level_s0).state, id(repellent_level_s1).state,
-            id(repellent_level_s2).state, id(repellent_level_s3).state);
+          ESP_LOGD("level", "S1=%d S2=%d S3=%d S4=%d S5=%d S6=%d S7=%d S8=%d  -> level %d/8",
+            id(repellent_level_s1).state, id(repellent_level_s2).state,
+            id(repellent_level_s3).state, id(repellent_level_s4).state,
+            id(repellent_level_s5).state, id(repellent_level_s6).state,
+            id(repellent_level_s7).state, id(repellent_level_s8).state,
+            id(level_top));
+          if (id(level_gap)) {
+            ESP_LOGW("level", "ladder has a gap: a sensor reads wet above a dry one. "
+                              "Level taken from the contiguous run only (%d/8).", id(level_top));
+          }
 
       - lambda: |-
           uint8_t reg;
