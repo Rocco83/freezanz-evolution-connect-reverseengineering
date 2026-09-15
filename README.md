@@ -20,6 +20,7 @@ Raccogliere e mantenere una descrizione completa di **pin‑out**, **connettori*
 | -------- | -------------- | -------------------- | ---------------------------------------------------------------------------- |
 | 0.5      | 2025‑05‑13     | ChatGPT + Rocco83    | Sostituita tabella pin‑out ESP32 con layout basato su LastMinuteEngineer + mapping Freezanz |
 | 0.6      | 2026‑03‑12     | Rocco83 + Claude     | Mappatura completa J3 (I2C expansion), J8 (LED ext), P2 (sensor input), correzione P1 |
+| 0.7      | 2026‑09‑15     | Rocco83 + Claude     | R452/R455 identificati come pull-up 3K3 (era "290 Ω serie"); corretta tabella pin‑out ESP32; P1 pin 1 = P+ confermato; rimossi blocchi duplicati; chiarito che la 230 VAC non è su questa scheda |
 
 
 ---
@@ -28,7 +29,7 @@ Raccogliere e mantenere una descrizione completa di **pin‑out**, **connettori*
 
 * Foto PCB fronte/retro (repository)
 * **Datasheet ESP32‑WROOM‑32E** (Espressif)
-* Articolo di riferimento pin‑out: "ESP32‑WROOM‑32 Pinout" — LastMinuteEngineers 🎓
+* Articolo di riferimento pin‑out: ["ESP32‑WROOM‑32 Pinout Reference"](https://lastminuteengineers.com/esp32-wroom-32-pinout-reference/) — LastMinuteEngineers 🎓 — immagine riprodotta nella sezione pin‑out
 * Manuale d’uso Freezanz (in attesa)
 * Foto prodotto: ![Zhalt Evolution Connect](https://www.emporiodiantonio.com/cdn/shop/products/zhaltevolutionconnect_1024x1024@2x.jpg)
 
@@ -37,12 +38,12 @@ Raccogliere e mantenere una descrizione completa di **pin‑out**, **connettori*
 ## Riepilogo connettori esterni
 | Rif.            | Tipo / passo           | Pin ↓                        | Segnale         | Tensione       | Descrizione |
 |-----------------|------------------------|------------------------------|-----------------|----------------|-------|
-| **J1 (DC_IN)**  | Jack barrel (diameter TBD) | Tip = **V+**, Sleeve = GND | TBD (12 V ?)    | Ingresso alimentazione continua; negativo a massa, positivo protetto da **D1** e instradato al bus **P+** e **B+**, oltre a P1 via **H6** |
+| **J1 (DC_IN)**  | Jack barrel Ø2.1 mm    | Tip = **V+**, Sleeve = GND | 12 V DC         | Ingresso alimentazione continua; negativo a massa, positivo protetto da **D1** e instradato al bus **P+** e **B+**, oltre a P1 via **H6** |
 | **PUMP**        | Fast-on 2 p            | **PUMP P (P+) / PUMP N (P-)**   | 12 VCC | Rele` pompa nebulizzatore usa la stessa VCC del jack J1, GND mediato da IO27 (da confermare) |
 | **BATT**        | Fast-on 2 p            | **BATT P (B+)  / BATT N (B-)**  | 12 VCC | Backup battery (condensatore 16V 68000 uF); **B+** è solidale alla rail **P+** |
 | **P1**          | JST-XH 3 p             | 1 = **P+ (12V via H6)**, 2 = GND, 3 = sensor input → R71 (38KΩ) → R107 (0Ω) → GPIO5 | 12V / 0-3.3V | Sensore dry contact: aperto = HIGH su GPIO5, chiuso a GND = LOW. 38KΩ protegge GPIO5 da tensioni >3.3V |
 | **J3**          | Pin header 2×4 (NP)    | vedi sezione dedicata        | 3.3V / I2C      | Porta espansione I2C + GPIO. Non collegata di serie. |
-| **J8 (LED_EXT)**| JST-XH 5 p (NP)        | vedi sezione dedicata        | 12V             | Connettore LED esterni. Non collegato di serie. |
+| **J8 (LED_EXT)**| Pin header 5 p (NP)    | vedi sezione dedicata        | 12V             | Connettore LED esterni. Non collegato di serie. |
 | **P2**          | JST-XH 3 p (NP)        | 1 = 12V, 2 = GND, 3 = sensor input → R67 (38KΩ) → R106 (0Ω) → GPIO15 | 12V / 0-3.3V | Secondo ingresso sensore dry contact, stesso schema di P1. Non collegato di serie. |
 
 
@@ -75,10 +76,14 @@ Progettato per collegare moduli I2C esterni (display, sensori) o periferiche dig
 
 ### Note I2C su J3
 
-- I pull-up interni alla board su SCL/SDA sono già presenti (R452, R455 da 3K3
-  collegate a VCC tramite pin 3).
+- I pull-up su SCL/SDA sono già presenti e **sempre attivi**: **R452 = 3K3 su SCL**,
+  **R455 = 3K3 su SDA**, entrambe verso la rail 3.3 V dell'ESP32 — la stessa rail
+  esposta su pin 3. Il pin 3 è una derivazione di quella rail, **non** un
+  interruttore: non serve alimentarlo per abilitare i pull-up. Confermato a
+  multimetro (vedi "R452 / R455" più sotto).
 - Per usare il bus I2C su J3: collegare VCC a pin 1 o 2, GND a pin 4,
-  SDA a pin 5, SCL a pin 7. Alimentare pin 3 per attivare i pull-up.
+  SDA a pin 5, SCL a pin 7. Il pin 3 **fornisce** 3.3 V al dispositivo esterno:
+  è un'uscita derivata dalla rail dell'ESP32, non un ingresso da alimentare.
 - GPIO5 (pin 6) è condiviso con il sensore acqua su P1: non usare
   contemporaneamente P1 e J3 pin 6 per segnali distinti.
 - GPIO15 (pin 8) è un boot-strapping pin: deve essere HIGH al boot.
@@ -161,48 +166,24 @@ This has been confirmed
 
 ---
 
-## Tests to perform
+## Alimentazione — la 230 VAC non è su questa scheda
 
-| Rif. | Tipo / passo | Pin ↓ | Segnale | Tensione     | Descrizione |
-| --------------- | ------------------------ | ------------------------------ | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| **J1 (DC\_IN)** | Jack barrel Ø2.1 mm | Tip = **V+**, Sleeve = GND | TBD (12 V?) | Ingresso alimentazione continua; negativo a massa, positivo protetto da **D1** (diodo anti‑inversione, 1.22 kΩ) e instradato al bus **P+** via **H6** | |
-| **AC\_IN** | Fast-on 2 p | L / N | 230 VAC | Alimentazione di rete     | |
-| **PUMP\_OUT** | Fast-on 2 p | **PUMP P / PUMP N** | 230 VAC | Pompa nebulizzatore (relè)    | |
-| **BAT** | Fast-on 2 p | **B+ / B-** | 12 V DC | Backup battery; **B+ rail is hard‑wired to bus P+**    | |
-| **P1** | JST-XH 3 p | 1 = GPIO5, 2 = GND, 3 = **P+** | 0–3 V3 | I/O esterno; pin 3 condiviso con **P+** tramite jumper **H6**   | |
-| **J3** | Pin header (unpopulated) | 8 = **IO15** (via R89 470 Ω) | 0–3 V3 | Porta di espansione riservata (non cablata di serie)    | |
-| **LED\_EXT** | JST-XH 3 p | TBD | 0–3 V3 | Connettore LED esterni    | |
+Su questa scheda **non è presente la rete 230 VAC.** Il trasformatore è su una
+**scheda esterna separata**, che fornisce 12 V continui all'ingresso `J1 (DC_IN)`.
+Di conseguenza tutto ciò che sta a bordo — pompa inclusa — lavora a 12 V.
 
-### Silkscreen power rail labels (bottom edge)
+| Elemento | Dove | Note |
+| -------- | ---- | ---- |
+| Alimentatore 230 VAC → 12 V | **scheda esterna** | fuori dallo scopo di questo documento |
+| `J1 (DC_IN)` | questa scheda | jack barrel Ø2.1 mm, ingresso 12 V |
+| Rail `P+` | questa scheda | 12 V distribuiti a pompa, buzzer, LED, P1/P2, J3 pin 1 |
+| `BATT` (`B+` / `B-`) | questa scheda | condensatore di backup 16 V 68000 µF, solidale a `P+` |
 
-| Label serigrafia | Rail / Signal                                          |
-| ---------------- | ------------------------------------------------------ |
-| **P+**           | "PUMP P" – Positive supply rail for pump & peripherals |
-| **P-**           | "PUMP N" – Return/ground for pump                      |
-| **B+**           | "BATT P" – Battery positive (internally tied to P+)    |
-| **B-**           | "BATT N" – Battery negative                            |
+La pompa nebulizzatore è quindi pilotata **a 12 V** tramite relè, non a 230 VAC.
+
+---
 
 ## Connettore **J4** — Header di programmazione ESP32
-
-| Rif. | Tipo / passo | Pin ↓ | Segnale | Tensione | Descrizione |
-| --------------- | ------------------- | ------------------------------ | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| **J1 (DC\_IN)** | Jack barrel Ø2.1 mm | Tip = **V+**, Sleeve = GND | TBD (12 V?) | Ingresso alimentazione continua; negativo a massa, positivo protetto da **D1** (diodo anti‑inversione, 1.22 kΩ) e instradato al bus **P+** via **H6** | |
-| **AC\_IN** | Fast-on 2 p | L / N | 230 VAC | Alimentazione di rete | |
-| **PUMP\_OUT** | Fast-on 2 p | **PUMP P / PUMP N** | 230 VAC | Pompa nebulizzatore (relè) | |
-| **BAT** | Fast-on 2 p | **B+ / B-** | 12 V DC | Backup battery; **B+ rail is hard‑wired to bus P+** | |
-| **P1** | JST‑XH 3 p | 1 = GPIO5, 2 = GND, 3 = **P+** | 0–3 V3 | I/O esterno; pin 3 condiviso con **P+** tramite jumper **H6** | |
-| **LED\_EXT** | JST‑XH 3 p | TBD | 0–3 V3 | Connettore LED esterni | |
-
-### Silkscreen power rail labels (bottom edge)
-
-| Label serigrafia | Rail / Signal                                          |
-| ---------------- | ------------------------------------------------------ |
-| **P+**           | "PUMP P" – Positive supply rail for pump & peripherals |
-| **P-**           | "PUMP N" – Return/ground for pump                      |
-| **B+**           | "BATT P" – Battery positive (internally tied to P+)    |
-| **B-**           | "BATT N" – Battery negative                            |
-
-## Connettore **J4** — Header di programmazione ESP32 **J4** — Header di programmazione ESP32 **J1** — Header di programmazione ESP32
 
 | Pin J1 | Segnale scheda   | Collegare FTDI        | Pad modulo | Descrizione                         |
 | ------ | ---------------- | --------------------- | ---------- | ----------------------------------- |
@@ -222,6 +203,10 @@ This has been confirmed
 ---
 
 ## Pin‑out **ESP32‑WROOM‑32E** (basato su LastMinuteEngineer + mapping Freezanz)
+
+![Pinout ESP32‑WROOM‑32](esp32-wroom-32-pinout.png)
+
+*Immagine: [ESP32‑WROOM‑32 Pinout Reference](https://lastminuteengineers.com/esp32-wroom-32-pinout-reference/) — © LastMinuteEngineers, riprodotta come riferimento tecnico. La tabella seguente mappa questi pin sulle funzioni Freezanz.*
 
 | Pin # | Pin Label | GPIO |**Freezanz Function** |Tipo |Note |Reason |Safe to use? |
 | - | ---------- | ---- |------------------------- |--------------- |------ |----------- |------------ |
@@ -256,10 +241,10 @@ This has been confirmed
 | 29 | IO5 | 5 | **P1‑1** | TBD input | Connettore P1 pin sinistro | Must be HIGH at boot | ⚠︎ |
 | 30 | IO18 | 18 | **LED D6** (Green) | Output | High = ON | — | ✔︎ |
 | 31 | IO19 | 19 | **LED D3** (Blue) | Output | High = ON | — | ✔︎ |
-| 33 | IO21 | 21 | **RTC I²C SDA (addr 0x6F; clock ticking)** | I/O | **SDA** which keep the clock through IC29 & Y2. Path: **R455** (290 Ω) Ω -> **R69 220 Ω** -> IC29 3rd pin from top‑left | Default I²C **SDA** | ✔︎ |
+| 33 | IO21 | 21 | **RTC I²C SDA (addr 0x6F; clock ticking)** | I/O | **SDA** which keeps the clock through IC29 & Y2. Pull-up: **R455 = 3K3 → 3V3** (misurato). Verso l'RTC: **R70 220 Ω** → IC29. Verso J3-5: **R65 120 Ω** | Default I²C **SDA** | ✔︎ |
 | 34 | RXD0 | 3 | **UART RX0 (J1‑3)** | Input | 115 200 8N1 console | UART / flashing | ⚠︎ |
 | 35 | TXD0 | 1 | **UART TX0 (J1‑2)** | Output | 115 200 8N1 console | UART / flashing | ⚠︎ |
-| 36 | IO22 | 22 | **RTC I²C SCL (addr 0x6F; clock ticking)** | I/O | **SCL** which keep the clock through IC29 & Y2. Path: **R452** (290 Ω) -> **R69 220 Ω** → IC29 3rd pin from top‑left | Default I²C **SCL** | ✔︎ |
+| 36 | IO22 | 22 | **RTC I²C SCL (addr 0x6F; clock ticking)** | I/O | **SCL** which keeps the clock through IC29 & Y2. Pull-up: **R452 = 3K3 → 3V3** (misurato). Verso l'RTC: **R69 220 Ω** → IC29. Verso J3-7: **R66 120 Ω** | Default I²C **SCL** | ✔︎ |
 | 37 | IO23 | 23 | **LED D7** (Green) | Output | High = ON | — | ✔︎ |
 | 38 | GND | — | — | — | Non usato sulla scheda (pad GND termico) | Ground | ✔︎ |
 
@@ -366,9 +351,9 @@ The sensor outputs a signal proportional to liquid flow on the return pin.
 
 | P1 Pin | Signal | Description |
 |--------|--------|-------------|
-| 1 | GPIO5 | Signal return pin |
+| 1 (pad quadrato) | **P+ (12V via H6)** | Sensor power supply |
 | 2 | GND | Ground reference |
-| 3 | P+ (12V via H6) | Sensor power supply |
+| 3 | Sensor input → R71 (38KΩ) → R107 (0Ω) → GPIO5 | Signal return pin |
 
 ### Signal behavior
 
@@ -380,7 +365,7 @@ The sensor outputs a signal proportional to liquid flow on the return pin.
 
 The sensor return pin operates at ~9V. Direct connection to GPIO5 (max 3.3V)
 would destroy the ESP32. A voltage divider or level shifter **must be present**
-between P1 pin 1 and GPIO5 on the PCB — verify resistor values on PCB traces
+between P1 pin 3 and GPIO5 on the PCB — verify resistor values on PCB traces
 between P1 connector and GPIO5.
 
 ### Pull-down
@@ -392,7 +377,7 @@ If a resistor to GND is already present on the PCB on this line, it may be suffi
 
 ### TODO
 
-- [ ] Identify and measure voltage divider components between P1 pin 1 and GPIO5
+- [ ] Identify and measure voltage divider components between P1 pin 3 and GPIO5
 - [ ] Determine exact timing pattern of state transitions during normal pump activation
 - [ ] Define threshold (duration of LOW) to classify as water fault vs normal transition
 
@@ -485,61 +470,40 @@ Quando entrambi i test passano, l’emulazione del pulsante e il segnale RTC son
 
 ---
 
-### R452 / R455 — identificazione pull-up I²C
+### R452 / R455 — identificazione pull-up I²C — **RISOLTO (2026-09-15)**
 
-**Problema**
+**Esito**: R452 e R455 **sono i pull-up I²C da 3K3**, sempre attivi, verso la
+rail 3.3 V dell'ESP32.
 
-Questo documento si contraddice sulle stesse due sigle:
+| Sigla | Ruolo confermato |
+| ----- | ---------------- |
+| **R452** | pull-up 3K3 su **SCL** (IO22, pin 36) → 3V3 |
+| **R455** | pull-up 3K3 su **SDA** (IO21, pin 33) → 3V3 |
 
-| Riferimento | Descrizione |
-| ----------- | ----------- |
-| Note I2C su J3 (sopra) | R452, R455 **da 3K3 verso VCC**, attive tramite pin 3 → sono **pull-up** |
-| Tabella pin-out ESP32 (IO21 / IO22) | R455 e R452 **da 290 Ω** verso R69 → IC29 → sono **resistenze di serie** |
+Il valore "290 Ω in serie verso IC29" che compariva nella tabella pin-out ESP32
+era **errato** ed è stato corretto. Le resistenze di serie verso J3 sono altre:
+**R65 120 Ω** su SDA e **R66 120 Ω** su SCL; verso l'RTC la serie è **R69 220 Ω**.
 
-Sono due topologie incompatibili: la stessa resistenza non può essere un pull-up
-da 3K3 verso VCC e contemporaneamente 290 Ω in serie sulla linea SDA/SCL. Il
-README della breakout `freezanz-level-io` cita un terzo valore ancora, 2.58 k.
+**Come è stato determinato**
 
-**Perché è importante**
+1. Continuità: `SDA breakout → R65 (120 Ω) → pin 33 ESP32`, e
+   `SCL breakout → R66 (120 Ω) → pin 36 ESP32`.
+2. Continuità: `pin 36 (SCL) → R452 → 3V3` e `pin 33 (SDA) → R455 → 3V3`.
+3. Misure a multimetro, coerenti fra loro:
+   * pin ESP32 → GND: **3.5 kΩ** (pull-up letto attraverso la rail 3V3 non alimentata)
+   * dal lato breakout → 3V3: **3.4 kΩ** su entrambe le linee
+     = 3K3 del pull-up + 120 Ω della serie. Conferma incrociata.
 
-La breakout lascia **R1/R2 (4k7) non popolate** proprio assumendo che i pull-up
-esistano già a monte. Se il valore corretto è 290 Ω allora sono resistenze di
-serie, su J3 non arriva alcun pull-up, e il bus I²C della breakout non ne ha —
-il che spiegherebbe i timeout e il motivo per cui in `freezanz.yaml` la
-frequenza è scesa da 100 kHz a `10kHz`.
+**Conseguenze**
 
-Nota a favore dell'ipotesi pull-up: l'RTC a 0x6F viene enumerato e il clock
-avanza, e senza pull-up l'I²C non può funzionare. Quindi un pull-up esiste da
-qualche parte; resta da stabilire se sia raggiungibile dal lato J3.
-
-**Ipotesi di riconciliazione**: 3K3 è il valore nominale e 2.58 k è una misura
-in-circuito dello stesso in parallelo a qualcos'altro (3.3 k ∥ 11.8 k = 2.58 k).
-In quel caso l'unico dato errato sarebbe il 290 Ω. Da verificare.
-
-**Test procedure**
-
-Scheda alimentata, nessun dispositivo che pilota il bus:
-
-1. Alimentare **J3 pin 3** (3.3 V): i pull-up sono dichiarati attivi solo
-   tramite quel pin.
-2. Misurare la tensione DC a riposo su **J3 pin 5 (SDA)** e **J3 pin 7 (SCL)**:
-   * ~3.3 V ⇒ pull-up presenti e raggiungibili da J3
-   * ~0 V o flottante ⇒ nessun pull-up su J3 → servono R1/R2 sulla breakout
-3. Determinarne il valore: collegare una resistenza nota da **3.3 kΩ** fra SDA e
-   GND e rimisurare SDA. Con `V = 3.3 × Rload / (Rpu + Rload)`:
-
-   | V misurata | Rpu dedotta | Conclusione |
-   | ---------- | ----------- | ----------- |
-   | ~1.65 V | ~3.3 kΩ | pull-up confermati — R1/R2 restano non popolate |
-   | ~3.0 V | ~290 Ω | è una serie — la breakout deve popolare R1/R2 |
-
-4. Ripetere il punto 3 su SCL (pin 7).
-5. Aggiornare di conseguenza la sezione "Note I2C su J3" **e** la tabella
-   pin-out ESP32, eliminando il valore errato.
-
-
----
-
+* La breakout `freezanz-level-io` **non deve popolare R1/R2** (4k7): i pull-up
+  esistono già e sono raggiungibili attraverso J3. Aggiungerne altri
+  abbasserebbe troppo la resistenza equivalente.
+* I pull-up **non** dipendono dall'alimentazione del pin 3: sono legati in modo
+  permanente alla rail 3.3 V della scheda.
+* 3K3 è un valore del tutto normale: **questo non spiega i timeout I²C**, che
+  restano da indagare altrove (capacità del cavo, rumore condotto dalla rail
+  della pompa).
 
 ## TODO
 
@@ -549,9 +513,9 @@ Scheda alimentata, nessun dispositivo che pilota il bus:
 * [x] Mappatura P2: secondo sensore dry contact su GPIO15, stesso schema P1/GPIO5.
 * [x] Correzione P1: pin 1 = 12V (P+ via H6), pin 3 = sensore → R71 38KΩ → R107 0Ω → GPIO5.
 * [x] Phase‑2 test: board re‑installed in unit.
-* [ ] **R452 / R455**: risolvere la contraddizione 3K3 pull-up verso VCC vs 290 Ω in serie — vedi il test dedicato sopra. Da questo dipende se la breakout `freezanz-level-io` debba popolare R1/R2, e potrebbe essere la causa dei timeout I²C.
+* [x] **R452 / R455**: risolti — sono i pull-up I²C da 3K3 (R452 su SCL, R455 su SDA) verso la rail 3.3 V, sempre attivi. Il "290 Ω in serie" era errato. La breakout `freezanz-level-io` non deve popolare R1/R2. Non spiega i timeout I²C.
 * [ ] **Tensione reale della rail 12 V**: misurarla. D1 sulla breakout è un P6KE15A, stand-off 12.8 V: se la rail sta sopra (es. 13.8 V) il TVS lavora in perdita e si scalda. I condensatori (C1 25 V) reggono comunque.
-* [ ] **PUMP: 12 VCC o 230 VAC?** Il riepilogo connettori dice 12 VCC, la tabella "Tests to perform" dice 230 VAC. Da cui dipende anche la giustificazione del TVS D1 sulla breakout.
+* [x] **PUMP è a 12 VCC.** La 230 VAC non è su questa scheda: il trasformatore sta su una scheda esterna che fornisce 12 V a `J1`. Le righe che indicavano 230 VAC erano in blocchi duplicati obsoleti, ora rimossi.
 * [ ] SENSOR\_VP/VN: log ADC values in real operation.
 * [ ] Draw partial schematic in KiCad.
 * [ ] Understand how the serial port of the original firmware is working
