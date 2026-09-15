@@ -181,6 +181,12 @@ Di conseguenza tutto ciò che sta a bordo — pompa inclusa — lavora a 12 V.
 
 La pompa nebulizzatore è quindi pilotata **a 12 V** tramite relè, non a 230 VAC.
 
+**Tutto ciò che arriva dall'esterno è a 12 V** (confermato). I 3.3 V per l'ESP32
+sono generati a bordo da uno stadio step-down dai 12 V della rail `P+`; è la
+stessa rail 3.3 V esposta su `J3` pin 3 e su cui sono legati i pull-up I²C
+R452/R455. Quindi su questa scheda esistono due sole tensioni: **12 V** in
+ingresso e distribuzione, **3.3 V** per la logica.
+
 ---
 
 ## Connettore **J4** — Header di programmazione ESP32
