@@ -115,7 +115,7 @@
         "pth_inside_courtyard": "error",
         "shorting_items": "error",
         "silk_edge_clearance": "warning",
-        "silk_over_copper": "warning",
+        "silk_over_copper": "ignore",
         "silk_overlap": "warning",
         "skew_out_of_range": "error",
         "solder_mask_bridge": "error",
@@ -240,7 +240,7 @@
       "internal_id": "",
       "mfg": "",
       "mpn": "",
-      "sch_revision": ""
+      "sch_revision": "A"
     },
     "layer_pairs": [],
     "layer_presets": [],
@@ -645,13 +645,18 @@
       {
         "filename": "freezanz-level-io.kicad_sch",
         "name": "freezanz-level-io",
-        "uuid": "00000000-0000-0000-0000-000000000000"
+        "uuid": "3a0695c2-c641-4c49-be7c-376fd7c0c276"
       }
     ],
     "used_designators": "",
     "variants": []
   },
-  "sheets": [],
+  "sheets": [
+    [
+      "3a0695c2-c641-4c49-be7c-376fd7c0c276",
+      "freezanz-level-io"
+    ]
+  ],
   "text_variables": {},
   "tuning_profiles": {
     "meta": {

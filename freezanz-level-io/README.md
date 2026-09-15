@@ -6,17 +6,16 @@ the only thing needed from the fab house is the bare PCB.
 
 - Board cut: **90 × 50 mm** (enclosure is 95 × 55, so there is margin all round)
 - 2 layers, 1.6 mm
-- 46 parts to fit, 5 optional footprints left unpopulated
+- 50 parts to fit, 5 optional footprints left unpopulated
 
 ## Files
 
 | File | Contents |
 |---|---|
-| `freezanz-level-io.kicad_pro` | project — net classes Default 0.3 mm / Power 0.8 mm |
+| `freezanz-level-io.kicad_pro` | project — one net class, Default: 0.2 mm track, 0.2 mm clearance |
 | `freezanz-level-io.kicad_sch` | full schematic, footprints already assigned |
 | `freezanz-level-io.kicad_pcb` | board outline only, 90 × 50 on Edge.Cuts |
 | `schema-rev-a.svg` | readable schematic, for review without KiCad |
-| `gen_kicad.py`, `make_pcb.py` | generators — edit and re-run to rebuild |
 
 ## Getting started
 
@@ -45,27 +44,35 @@ and 17.78 mm left-to-inner.
 |---|---|---|
 | 1 | VCC | GND |
 | 2 | INTB | INTA |
-| 3 | GPB0 | **GPA0 → IO1** |
-| 4 | GPB1 | **GPA1 → IO2** |
-| 5 | GPB2 | **GPA2 → IO3** |
-| 6 | GPB3 | **GPA3 → IO4** |
-| 7 | GPB4 | **GPA4 → IO5** |
-| 8 | GPB5 | **GPA5 → IO6** |
-| 9 | GPB6 | **GPA6 → IO7** |
-| 10 | GPB7 | **GPA7 → IO8** |
+| 3 | **GPB0 → B0** | GPA0 → A0 |
+| 4 | **GPB1 → B1** | GPA1 → A1 |
+| 5 | **GPB2 → B2** | GPA2 → A2 |
+| 6 | **GPB3 → B3** | GPA3 → A3 |
+| 7 | **GPB4 → B4** | GPA4 → A4 |
+| 8 | **GPB5 → B5** | GPA5 → A5 |
+| 9 | **GPB6 → B6** | GPA6 → A6 |
+| 10 | **GPB7 → B7** | GPA7 → A7 |
 
-Port A, the outer column, carries the level sensors. `J4` is a 2×10 with
-odd/even numbering, so **odd pins are the outer column**: when placing it, keep
-pin 1 on the side away from `J3`, and rotate it so pin 1 ends up at the top —
-that makes the board read the same way up as the module silkscreen.
+**Port B, the inner column, carries the level sensors**; port A goes to the `J6`
+breakout. `J4` is a 2×10 with odd/even numbering, and the **odd pins are the
+inner column** — the one nearer `J3`.
 
-Left row `J3`: `A2 A1 A0 RESET SO CS SDA SCL GND VCC`. Pins 5 and 6 are SPI-only
+This assignment was wrong on rev A. The board had GND and port A on the inner
+column, but the real CJMCU module has **VCC and port B inboard**. Plugging in a
+correctly-seated module therefore put VCC on the GND net and destroyed the chip.
+Rev B swaps the columns to match. Because the sensors are wired to the inner
+column, they now land on port B — which is why the nets are `B0..B7` and the
+firmware addresses them as ESPHome `number: 8..15`.
+
+Left row `J3`: `AD2 AD1 AD0 RESET SO CS SDA SCL GND VCC`. Pins 5 and 6 are SPI-only
 and stay unconnected.
 
-**A2/A1/A0 on the left row are the I²C hardware address inputs, not GPIO.** They
-share names with the port A pins on the right row, which is confusing, but they
-are unrelated pins. All three are tied straight to GND, setting the address to
-0x20.
+**The three address pins are called `AD2 AD1 AD0` in this document.** The module
+silkscreen prints them as A0/A1/A2 — the *same* names it prints on the port A
+pins of the right row, so `A0` appears twice on the module and means two
+unrelated things. To avoid that trap: the I²C hardware address inputs are
+`AD0..AD2` here, the port A GPIO nets are `A0..A7`. All three `AD` pins are tied
+straight to GND, setting the address to **0x20**.
 
 ## Input — one IDC connector
 
@@ -84,10 +91,15 @@ IDC zig-zag numbering, odd pins on one row, even on the other.
 | 7 | `SCL` | GPIO22 through R66, 120 Ω |
 | 8 | `GPIO15` | through R89, 470 Ω — boot-strapping pin |
 
-SDA and SCL already carry 120 Ω in series and 3.3 kΩ pull-ups (R452/R455,
-enabled by powering pin 3) on the Freezanz side, which is why R1/R2 here stay
-unpopulated. GPIO5 and GPIO15 are ESP32 strapping pins that must sit HIGH at
-reset, so anything connected to `J8`/`J9` must not hold them low during boot.
+SDA and SCL already carry 120 Ω in series (R65/R66) and 3.3 kΩ pull-ups
+(R455 on SDA, R452 on SCL) on the Freezanz side, which is why R1/R2 here stay
+unpopulated. Those pull-ups are tied permanently to the ESP32's 3.3 V rail — pin 3
+is a tap off that same rail, not a switch, so they are active whenever the
+mainboard is powered. Measured from this board: 3.4 kΩ to 3V3 on both lines,
+i.e. the 3K3 pull-up plus the 120 Ω series.
+
+GPIO5 and GPIO15 are ESP32 strapping pins that must sit HIGH at reset, so
+anything connected to `J8`/`J9` must not hold them low during boot.
 
 `JP2` selects which 12 V feeds the board, centre pin as the output. The 0.2 Ω is
 almost certainly a sense shunt rather than a filter, so do not parallel the two
@@ -112,7 +124,7 @@ XKC-Y25-NPN, 4-pin flat connector:
 XH 4p       |          MCP23017
  1 M -------|--------- SENS_M --- JP1 --- GND
  2 GND      |
- 3 SIG -[470R]----------.-------- GPA0..GPA7
+ 3 SIG -[470R]----------.-------- GPB0..GPB7  (nets B0..B7)
         R11..R18
  4 +12V
 ```
@@ -137,10 +149,23 @@ J1.2 +12V_FILT --+                         +-- C1 10uF (+ C2 pad, not fitted)
                                            +-- J8, J9
 ```
 
-**F1 is a 500 mA fast 5×20 cartridge.** Real load is about 40 mA (8 × 5 mA), so
-roughly 12× margin, and far below what the JST-XH connectors (3 A) or the traces
-can carry. It is the only entry point for 12 V on this board, so it blows before
-anything else is damaged.
+**F1 is a 200 mA fast 5×20 cartridge.** Worst-case load is about 100 mA — eight
+sensors at up to 10 mA, ~20 mA if `J8`/`J9` are populated, 1 mA for the indicator
+LED — so the fuse runs at ~50 % of rating, which it needs inside a closed
+enclosure where ambient sits above room temperature.
+
+The rating is set by the **copper**, not by the load. Every track on this board is
+0.2 mm, good for 0.74 A at 10 °C rise (1 oz, outer layer). A 200 mA fast fuse
+opens around 0.4 A, where the traces are barely warm. The 500 mA originally
+specified here was chosen from the 40 mA typical load and was too loose: it
+carries 500 mA indefinitely and does not open until roughly 1 A, i.e. past what
+the copper is comfortable with. 250 mA is an acceptable alternative if you want
+headroom; above that the fuse stops protecting the traces.
+
+Fast (F), not slow (T): nothing on this rail is inductive, and C1's inrush is
+microseconds — roughly 7 × 10⁻⁴ A²s against a 200 mA fast fuse's melting I²t of
+order 10⁻² A²s, so no nuisance blowing. Any standard 250 V glass cartridge is
+fine; 12 V DC is trivially interruptible.
 
 **D1** is a unidirectional TVS: open circuit below 15 V, conducting above,
 clamping transients to ground. It earns its place because the 12 V rail is shared
@@ -170,9 +195,11 @@ capacitor. A small ceramic has little capacitance but works into the tens of MHz
 
 | Ref | Value | Why |
 |---|---|---|
-| R1, R2 | 4k7 | I²C pull-ups. I²C is open-drain: devices only pull low, so something has to return the line to 1. **Not fitted** — the RTC and the existing 2.58 k already do this, and more would drop the equivalent resistance too far. |
+| R1, R2 | 4k7 | I²C pull-ups. I²C is open-drain: devices only pull low, so something has to return the line to 1. **Not fitted** — the Freezanz board already has 3K3 pull-ups (R452/R455, measured 3.4 kΩ from here including the 120 Ω series), and more would drop the equivalent resistance too far. |
 | R3 | 10k | RESET pull-up. RESET is active low; floating, it can pick up noise and reset the chip at random. The CJMCU module already has one, so this sits in parallel at about 5 k equivalent — harmless, and it covers a future module that lacks one. |
 | R4, R5 | 10k | strapping pull-ups for GPIO5 / GPIO15. **Not fitted** — only needed if something is connected to `J8`/`J9` that could hold them low at boot. |
+| R6, R7 | 470R | series protection on SDA / SCL at `J1`. If the IDC is plugged in rotated 180°, 12 V lands on the SCL pin; these cap the fault at (12−4)/470 ≈ 17 mA, inside the MCP23017's ±20 mA absolute maximum. Cost at 10 kHz is nil — against the 3K3 pull-up they divide a LOW to ~0.48 V, well under V_IL. Note **F1 does not protect this path**: a reversed connector injects 12 V on pins 7/8, bypassing JP2 and the fuse entirely. |
+| R8 | 10k | limits D2 to ~1 mA. |
 
 ## Connectors
 
@@ -198,12 +225,15 @@ capacitor. A small ceramic has little capacitance but works into the tens of MHz
 | 1 | 10k 1/4W | R3 | R_Axial_DIN0207 P2.54 vertical |
 | 2 | 4k7 1/4W *(not fitted)* | R1, R2 | R_Axial_DIN0207 P2.54 vertical |
 | 2 | 10k 1/4W *(not fitted)* | R4, R5 | R_Axial_DIN0207 P2.54 vertical |
+| 2 | 470R 1/4W | R6, R7 | R_Axial_DIN0207 P7.62 horizontal |
+| 1 | 10k 1/4W | R8 | R_Axial_DIN0207 P7.62 horizontal |
 | 1 | 10 µF 25 V electrolytic | C1 | CP_Radial_D6.3mm_P2.50mm |
 | 1 | 10 µF 16 V electrolytic | C3 | CP_Radial_D6.3mm_P2.50mm |
 | 1 | 100 nF ceramic | C4 | C_Disc_D5.0mm_W2.5mm_P5.00mm |
 | 1 | 100 nF ceramic *(not fitted)* | C2 | C_Disc_D5.0mm_W2.5mm_P5.00mm |
 | 1 | P6KE15A TVS | D1 | D_DO-15_P12.70mm_Horizontal |
-| 1 | 5×20 holder + F500 mA | F1 | Fuseholder_Cylinder-5x20mm Stelvio-Kontek PTF78 |
+| 1 | LED 5 mm (red) | D2 | LED_THT:LED_D5.0mm |
+| 1 | 5×20 holder + **F200 mA** fast, 250 V | F1 | Fuseholder_Cylinder-5x20mm Stelvio-Kontek PTF78 |
 | 1 | IDC header 2×4 vertical | J1 | IDC-Header_2x04_P2.54mm_Vertical |
 | 11 | JST-XH 4p vertical | J11–J18, J21–J23 | JST_XH_B4B-XH-A |
 | 2 | JST-XH 3p vertical | J8, J9 | JST_XH_B3B-XH-A |
@@ -231,7 +261,12 @@ Not placed — that is yours. Two things worth knowing before you start:
 - SDA and SCL run from `J1` pins 5 and 7 to `J3` pins 7 and 8. Keep them short
   and away from the 12 V run — given the history of I²C timeouts on this bus,
   that is not fussiness.
-- 12 V and 3V3 on the Power net class, 0.8 mm.
+- Everything is 0.2 mm, power included — there is no separate Power net class.
+  That is enough: 0.2 mm carries 0.74 A at 10 °C rise (1 oz, outer layer), the
+  12 V rail draws ~40 mA behind a 500 mA fuse, and the worst-case GND return is
+  365 mΩ, i.e. 15 mV of offset against an MCP23017 V_IL of 0.66 V. Widening is
+  not possible without rerouting anyway: where 12 V threads between the `J1` and
+  `J8` pads it is already at the full 0.2 mm clearance limit.
 - `SIG1..SIG8` are slow and can go anywhere.
 - GND has 35 connections and is by far the biggest net.
 
@@ -244,8 +279,8 @@ kicad-cli pcb export drill   --output gerbers/ freezanz-level-io.kicad_pcb
 
 ## Firmware note
 
-With eight sensors on port A, the MCP pins in `freezanz.yaml` become `number: 0`
-through `7`:
+The eight sensors are on **port B**, so in `freezanz.yaml` they are
+`number: 8` through `15` (GPB0..GPB7), as `repellent_level_s1 .. s8`:
 
 ```yaml
   - platform: gpio
@@ -253,12 +288,19 @@ through `7`:
     id: repellent_level_s1
     pin:
       mcp23xxx: mcp23017_hub
-      number: 0
+      number: 8          # GPB0 — port B starts at 8
       mode:
         input: true
-        pullup: false     # 10k pull-up is on the board now
+        pullup: false    # 10k pull-up is on the board (R21-R28)
+      inverted: true
 ```
 
 `pullup: false` because the 10k now lives on the PCB. And remember that
 `inverted:` writes the IPOL register on the chip — the bug that already cost an
 evening.
+
+The aggregate entities derive from all eight: "Repellent Liquid Level" reports
+the highest wet sensor in 12.5 % steps, "Repellent Liquid Status" maps that to
+CRITICAL / Critical / Warning / OK, and `pump_start` refuses to run when none of
+the eight is wet. Each sensor calls `update_d7_led` on change so the D7 indicator
+follows any of them, not just the lowest.
