@@ -106,14 +106,15 @@ inline void dump_mcp23017(esphome::i2c::I2CBus *bus, uint8_t addr) {
   ESP_LOGI(TAG_DUMP, "########## END 0x%02X ##########", addr);
 }
 
-// Probe every 7-bit address. Same method ESPHome uses at boot:
-// a zero-length write; an ACK means something is there.
+// Probe every 7-bit address with a zero-length write: an ACK means something
+// is there. ESPHome's own boot scan uses writev(), but that is not public on
+// I2CBus, so we go through write() -- same bus transaction (address + stop).
 // Returns the number of devices found.
 inline int i2c_scan(esphome::i2c::I2CBus *bus) {
   ESP_LOGI(TAG_SCAN, "--- I2C scan ---");
   int found = 0;
   for (uint8_t addr = 0x08; addr <= 0x77; addr++) {
-    if (bus->writev(addr, nullptr, 0) != esphome::i2c::ERROR_OK)
+    if (bus->write(addr, nullptr, 0) != esphome::i2c::ERROR_OK)
       continue;
     const char *hint = "";
     switch (addr) {

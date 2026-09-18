@@ -7,6 +7,7 @@ esphome:
   on_boot:
     priority: 600
     then:
+      - script.execute: recompute_level
       - script.execute: update_sensors
       - script.execute: rtc_read_time
       - lambda: |-
@@ -32,10 +33,13 @@ esp32:
 # Enable logging via UART
 logger:
 #  level: VERBOSE
-#  logs:
-#    i2c.idf: WARN
-#    i2c.master: WARN
-#    mcp23xxx: WARN
+  logs:
+    # Silence the chatty I2C/expander components. Raise to DEBUG temporarily
+    # when chasing a bus problem; the "Dump MCP 0x20" and "I2C Bus Scan"
+    # buttons cover on-demand inspection without constant polling.
+    i2c.idf: WARN
+    i2c.master: WARN
+    mcp23xxx: WARN
 #    sensor: WARN
 #    binary_sensor: WARN
 #    esp32.preferences: VERBOSE
@@ -464,10 +468,10 @@ binary_sensor:
             static uint32_t last_change = 0;
             uint32_t now = millis();
             uint32_t duration = now - last_change;
-            ESP_LOGI("water", "Water Pressure Raw -> %s (was %s for %dms)",
+            ESP_LOGI("water", "Water Pressure Raw -> %s (was %s for %ums)",
               x ? "ON" : "OFF",
               x ? "OFF" : "ON",
-              duration);
+              (unsigned) duration);
             last_change = now;
 
   - platform: template
@@ -539,6 +543,7 @@ binary_sensor:
     id: repellent_level_s1
     icon: "mdi:gauge-empty"
     entity_category: "diagnostic"
+    use_interrupt: false   # expander pin: no ESP32 interrupt available
     pin:
       mcp23xxx: mcp23017_hub
       number: 8
@@ -561,6 +566,7 @@ binary_sensor:
     id: repellent_level_s2
     icon: "mdi:gauge-low"
     entity_category: "diagnostic"
+    use_interrupt: false   # expander pin: no ESP32 interrupt available
     pin:
       mcp23xxx: mcp23017_hub
       number: 9
@@ -583,6 +589,7 @@ binary_sensor:
     id: repellent_level_s3
     icon: "mdi:gauge-low"
     entity_category: "diagnostic"
+    use_interrupt: false   # expander pin: no ESP32 interrupt available
     pin:
       mcp23xxx: mcp23017_hub
       number: 10
@@ -605,6 +612,7 @@ binary_sensor:
     id: repellent_level_s4
     icon: "mdi:gauge"
     entity_category: "diagnostic"
+    use_interrupt: false   # expander pin: no ESP32 interrupt available
     pin:
       mcp23xxx: mcp23017_hub
       number: 11
@@ -627,6 +635,7 @@ binary_sensor:
     id: repellent_level_s5
     icon: "mdi:gauge"
     entity_category: "diagnostic"
+    use_interrupt: false   # expander pin: no ESP32 interrupt available
     pin:
       mcp23xxx: mcp23017_hub
       number: 12
@@ -649,6 +658,7 @@ binary_sensor:
     id: repellent_level_s6
     icon: "mdi:gauge"
     entity_category: "diagnostic"
+    use_interrupt: false   # expander pin: no ESP32 interrupt available
     pin:
       mcp23xxx: mcp23017_hub
       number: 13
@@ -671,6 +681,7 @@ binary_sensor:
     id: repellent_level_s7
     icon: "mdi:gauge-full"
     entity_category: "diagnostic"
+    use_interrupt: false   # expander pin: no ESP32 interrupt available
     pin:
       mcp23xxx: mcp23017_hub
       number: 14
@@ -693,6 +704,7 @@ binary_sensor:
     id: repellent_level_s8
     icon: "mdi:gauge-full"
     entity_category: "diagnostic"
+    use_interrupt: false   # expander pin: no ESP32 interrupt available
     pin:
       mcp23xxx: mcp23017_hub
       number: 15
@@ -1455,6 +1467,12 @@ script:
           ESP_LOGI("led", "All OK -> LED green");
 
 interval:
+  # level_top/level_gap must not depend on catching an edge: the initial state
+  # at boot can be missed. This is pure memory access, no I2C.
+  - interval: 1s
+    then:
+      - script.execute: recompute_level
+
   - interval: 500ms
     then:
       - lambda: |-
@@ -1501,86 +1519,6 @@ interval:
                               "Level taken from the contiguous run only (%d/8).", id(level_top));
           }
 
-      - lambda: |-
-          uint8_t reg;
-          uint8_t valA = 0;
-          uint8_t valB = 0;
-          // Read port A
-          reg = 0x12;
-          id(bus_i2c).write(0x20, &reg, 1, false);
-          id(bus_i2c).read(0x20, &valA, 1);
-          // Read port B
-          reg = 0x13;
-          id(bus_i2c).write(0x20, &reg, 1, false);
-          id(bus_i2c).read(0x20, &valB, 1);
-          ESP_LOGD("mcp", "A0=%d A1=%d A2=%d A3=%d A4=%d A5=%d A6=%d A7=%d | B0=%d B1=%d B2=%d B3=%d B4=%d B5=%d B6=%d B7=%d",
-            (valA>>0)&1, (valA>>1)&1, (valA>>2)&1, (valA>>3)&1,
-            (valA>>4)&1, (valA>>5)&1, (valA>>6)&1, (valA>>7)&1,
-            (valB>>0)&1, (valB>>1)&1, (valB>>2)&1, (valB>>3)&1,
-            (valB>>4)&1, (valB>>5)&1, (valB>>6)&1, (valB>>7)&1);
-
-      - lambda: |-
-          uint8_t reg = 0x12;  // GPIO register port A
-          uint8_t val = 0;
-          id(bus_i2c).write(0x20, &reg, 1, false);
-          id(bus_i2c).read(0x20, &val, 1);
-          ESP_LOGD("mcp", "GPIO port A raw = 0x%02X", val);
-
-      - lambda: |-
-          uint8_t reg = 0x13;  // GPIO register port B
-          uint8_t val = 0;
-          id(bus_i2c).write(0x20, &reg, 1, false);
-          id(bus_i2c).read(0x20, &val, 1);
-          ESP_LOGD("mcp", "GPIO port B raw = 0x%02X", val);
-
-      - lambda: |-
-          uint8_t reg = 0x00;  // IODIRA register
-          uint8_t val = 0;
-          id(bus_i2c).write(0x20, &reg, 1, false);
-          id(bus_i2c).read(0x20, &val, 1);
-          ESP_LOGD("mcp", "IODIRA = 0x%02X (0xFF = all input)", val);
-          
-          reg = 0x12;  // GPIOA register
-          id(bus_i2c).write(0x20, &reg, 1, false);
-          id(bus_i2c).read(0x20, &val, 1);
-          ESP_LOGD("mcp", "GPIOA raw = 0x%02X", val);
-
-      - lambda: |-
-          uint8_t reg;
-          uint8_t val;
-          // IODIRB
-          reg = 0x01;
-          id(bus_i2c).write(0x20, &reg, 1, false);
-          id(bus_i2c).read(0x20, &val, 1);
-          ESP_LOGD("mcp", "IODIRB = 0x%02X (0xFF = all input)", val);
-          // GPIOB
-          reg = 0x13;
-          id(bus_i2c).write(0x20, &reg, 1, false);
-          id(bus_i2c).read(0x20, &val, 1);
-          ESP_LOGD("mcp", "GPIOB raw = 0x%02X", val);
-
-      - lambda: |-
-          uint8_t reg = 0x0C;  // GPPUA register
-          uint8_t val = 0;
-          id(bus_i2c).write(0x20, &reg, 1, false);
-          id(bus_i2c).read(0x20, &val, 1);
-          ESP_LOGD("mcp", "GPPUA = 0x%02X", val);
-
-      - lambda: |-
-          uint8_t reg;
-          uint8_t val;
-          reg = 0x12;  // GPIOA
-          id(bus_i2c).write(0x20, &reg, 1, false);
-          id(bus_i2c).read(0x20, &val, 1);
-          ESP_LOGD("mcp", "GPIOA  = 0x%02X", val);
-          reg = 0x10;  // INTCAPA
-          id(bus_i2c).write(0x20, &reg, 1, false);
-          id(bus_i2c).read(0x20, &val, 1);
-          ESP_LOGD("mcp", "INTCAPA = 0x%02X", val);
-          reg = 0x02;  // IPOLA - polarity inversion
-          id(bus_i2c).write(0x20, &reg, 1, false);
-          id(bus_i2c).read(0x20, &val, 1);
-          ESP_LOGD("mcp", "IPOLA  = 0x%02X", val);
 
 # addon
 mcp23017:
