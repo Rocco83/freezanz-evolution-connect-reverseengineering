@@ -149,7 +149,7 @@
 				)
 			)
 		)
-		(property "1" "B0"
+		(property "1" "A0"
 			(at -2.4892 -0.0254 0)
 			(unlocked yes)
 			(layer "B.SilkS")
@@ -162,7 +162,7 @@
 				(justify mirror)
 			)
 		)
-		(property "2" "B1"
+		(property "2" "A1"
 			(at -2.4892 2.3876 0)
 			(unlocked yes)
 			(layer "B.SilkS")
@@ -175,7 +175,7 @@
 				(justify mirror)
 			)
 		)
-		(property "3" "B2"
+		(property "3" "A2"
 			(at -2.4892 4.9784 0)
 			(unlocked yes)
 			(layer "B.SilkS")
@@ -188,7 +188,7 @@
 				(justify mirror)
 			)
 		)
-		(property "4" "B3"
+		(property "4" "A3"
 			(at -2.4892 7.7216 0)
 			(unlocked yes)
 			(layer "B.SilkS")
@@ -201,7 +201,7 @@
 				(justify mirror)
 			)
 		)
-		(property "5" "B4"
+		(property "5" "A4"
 			(at -2.4892 10.3124 0)
 			(unlocked yes)
 			(layer "B.SilkS")
@@ -214,7 +214,7 @@
 				(justify mirror)
 			)
 		)
-		(property "6" "B5"
+		(property "6" "A5"
 			(at -2.4892 12.6746 0)
 			(unlocked yes)
 			(layer "B.SilkS")
@@ -227,7 +227,7 @@
 				(justify mirror)
 			)
 		)
-		(property "7" "B6"
+		(property "7" "A6"
 			(at -2.4892 15.2146 0)
 			(unlocked yes)
 			(layer "B.SilkS")
@@ -240,7 +240,7 @@
 				(justify mirror)
 			)
 		)
-		(property "8" "B7"
+		(property "8" "A7"
 			(at -2.4892 17.7292 0)
 			(unlocked yes)
 			(layer "B.SilkS")
@@ -16856,7 +16856,7 @@
 		(property "Reference" "J1"
 			(at 0.9906 -2.921 0)
 			(layer "F.SilkS")
-			(uuid "eefb240a-af2a-4ea0-81b4-d3e065fa5772")
+			(uuid "d464d5b0-978e-4c6b-b941-2a54198f3ca6")
 			(effects
 				(font
 					(size 1 1)
@@ -16865,9 +16865,9 @@
 			)
 		)
 		(property "Value" "IDC 2x4 <- Freezanz J3"
-			(at 4.9784 3.6576 90)
+			(at 6.7056 3.6576 90)
 			(layer "B.SilkS")
-			(uuid "413486c1-a648-4c39-8941-47bbb312ac4b")
+			(uuid "9d9f09a9-352e-4e69-b227-205e8c751f4a")
 			(effects
 				(font
 					(size 1 1)
@@ -16880,7 +16880,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "ea56e90b-5c38-4902-bef9-1c42863329e7")
+			(uuid "702a96f0-14d9-4468-800a-8888f36dd406")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16891,7 +16891,7 @@
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
-			(uuid "a7996427-f4db-445c-83c5-2d0ae18592c2")
+			(uuid "00d29b82-f74e-4d78-b51c-cd87fb0850f4")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16908,6 +16908,111 @@
 					(size 1 1)
 					(thickness 0.15)
 				)
+			)
+		)
+		(property "1" "12v RAW"
+			(at -0.9906 -1.4732 0)
+			(unlocked yes)
+			(layer "B.SilkS")
+			(uuid "22393ccb-599a-4882-9c85-0cb013306398")
+			(effects
+				(font
+					(size 0.5 0.5)
+					(thickness 0.1)
+				)
+				(justify mirror)
+			)
+		)
+		(property "2" "12v FILT"
+			(at 2.7686 -1.524 0)
+			(unlocked yes)
+			(layer "B.SilkS")
+			(uuid "53290cec-ed89-43a3-96e3-e33b9e65af19")
+			(effects
+				(font
+					(size 0.5 0.5)
+					(thickness 0.1)
+					(bold yes)
+				)
+				(justify mirror)
+			)
+		)
+		(property "3" "3.3v"
+			(at -2.0066 2.54 0)
+			(unlocked yes)
+			(layer "B.SilkS")
+			(uuid "6c158b01-f078-4266-b2ef-6e1820228c06")
+			(effects
+				(font
+					(size 0.5 0.5)
+					(thickness 0.1)
+				)
+				(justify mirror)
+			)
+		)
+		(property "4" "GND"
+			(at 4.5974 2.5146 0)
+			(unlocked yes)
+			(layer "B.SilkS")
+			(uuid "104cafe1-1954-4129-9b56-b653ae94d89c")
+			(effects
+				(font
+					(size 0.5 0.5)
+					(thickness 0.1)
+				)
+				(justify mirror)
+			)
+		)
+		(property "5" "SDA"
+			(at -1.9558 5.0546 0)
+			(unlocked yes)
+			(layer "B.SilkS")
+			(uuid "763c921a-8150-4c36-95ff-85a28fc2a749")
+			(effects
+				(font
+					(size 0.5 0.5)
+					(thickness 0.1)
+				)
+				(justify mirror)
+			)
+		)
+		(property "6" "GPIO5"
+			(at 4.6736 5.0546 0)
+			(unlocked yes)
+			(layer "B.SilkS")
+			(uuid "16ed8ecc-1a06-47ca-9cda-a60b06c5fab2")
+			(effects
+				(font
+					(size 0.5 0.5)
+					(thickness 0.1)
+				)
+				(justify mirror)
+			)
+		)
+		(property "7" "SCL"
+			(at -1.9812 7.747 0)
+			(unlocked yes)
+			(layer "B.SilkS")
+			(uuid "80eef1d9-bdd0-4b5b-8f12-779a22be0f58")
+			(effects
+				(font
+					(size 0.5 0.5)
+					(thickness 0.1)
+				)
+				(justify mirror)
+			)
+		)
+		(property "8" "GPIO15"
+			(at 4.6482 7.6708 0)
+			(unlocked yes)
+			(layer "B.SilkS")
+			(uuid "90cc2ef8-b102-4236-85fc-5cd6dd02f73b")
+			(effects
+				(font
+					(size 0.5 0.5)
+					(thickness 0.1)
+				)
+				(justify mirror)
 			)
 		)
 		(path "/8a3c0fda-3815-42d4-9f19-b95a15876f57")
